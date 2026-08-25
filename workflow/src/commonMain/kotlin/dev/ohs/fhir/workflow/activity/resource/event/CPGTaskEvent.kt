@@ -66,7 +66,6 @@ class CPGTaskEvent(resource: Task) : CPGEventResource<Task>(TaskEventStatusMappe
           `for` = src.`for`,
           encounter = src.encounter,
           description = src.description,
-          basedOn = listOf(request.asReference()),
         )
       )
     }

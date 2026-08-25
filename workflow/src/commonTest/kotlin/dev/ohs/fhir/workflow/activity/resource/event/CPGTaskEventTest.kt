@@ -38,7 +38,14 @@ class CPGTaskEventTest {
   fun shouldCreateTaskEventInPreparationWhenFromRequest() {
     val event = CPGTaskEvent.from(taskRequest())
     assertEquals(EventStatus.PREPARATION, event.getStatus())
-    assertEquals("Task/task-1", event.getBasedOn()?.reference?.value)
+  }
+
+  @Test
+  fun shouldCarrySingleBasedOnWhenSet() {
+    val request = taskRequest()
+    val event = CPGTaskEvent.from(request)
+    event.setBasedOn(request.asReference())
+    assertEquals(listOf("Task/task-1"), event.resource.basedOn.map { it.reference?.value })
   }
 
   @Test
