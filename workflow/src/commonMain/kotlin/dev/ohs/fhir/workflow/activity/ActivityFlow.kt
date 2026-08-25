@@ -311,8 +311,11 @@ private constructor(
     /**
      * Returns the active (non-completed) flows for the [patientId], reconstructed from persistence.
      * Events and requests are searched by subject, chained via `basedOn`, and any flow whose latest
-     * request/event is completed is dropped. NOTE: when a new activity type is added, register its
+     * request/event is completed is dropped. When a new activity type is added, register its
      * event/request resource types below so this search can find it.
+     *
+     * Task-based flows are not reconstructed: a Task is both the request and the event, so a
+     * subject search cannot tell the two roles apart without a role marker on the resource.
      */
     suspend fun of(
       repository: WorkflowRepository,
@@ -321,13 +324,13 @@ private constructor(
       val subject = "Patient/$patientId"
 
       val events =
-        listOf("MedicationDispense", "Communication")
+        listOf("MedicationDispense", "Communication", "Procedure")
           .flatMap { repository.searchByReferenceParam(it, "subject", subject) }
           .map { CPGEventResource.of(it) }
 
       // This is used to fetch the `basedOn` resource for a request/event to form RequestChain
       val idToRequestMap: MutableMap<String, CPGRequestResource<*>> =
-        listOf("MedicationRequest", "CommunicationRequest")
+        listOf("MedicationRequest", "CommunicationRequest", "ServiceRequest")
           .flatMap { repository.searchByReferenceParam(it, "subject", subject) }
           .map { CPGRequestResource.of(it) }
           .associateByTo(LinkedHashMap()) { "${it.resourceType}/${it.logicalId}" }
