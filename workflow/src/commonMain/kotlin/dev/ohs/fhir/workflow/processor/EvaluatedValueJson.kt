@@ -47,16 +47,11 @@ import dev.ohs.fhir.model.r4.Time
 import dev.ohs.fhir.model.r4.Uri
 import dev.ohs.fhir.model.r4.Url
 import dev.ohs.fhir.model.r4.Uuid
-import kotlinx.serialization.json.Json
+import dev.ohs.fhir.workflow.fhirJson
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-
-private val elementJson = Json {
-  encodeDefaults = false
-  explicitNulls = false
-}
 
 /**
  * Converts an evaluated FHIRPath result into a [JsonElement] for dynamicValue write-back.
@@ -121,17 +116,17 @@ private fun quantityOrNull(value: Any): JsonElement? =
 
 private fun structuredOrNull(value: Any): JsonElement? =
   when (value) {
-    is Quantity -> elementJson.encodeToJsonElement(Quantity.serializer(), value)
-    is Coding -> elementJson.encodeToJsonElement(Coding.serializer(), value)
-    is CodeableConcept -> elementJson.encodeToJsonElement(CodeableConcept.serializer(), value)
-    is Reference -> elementJson.encodeToJsonElement(Reference.serializer(), value)
-    is Attachment -> elementJson.encodeToJsonElement(Attachment.serializer(), value)
-    is Identifier -> elementJson.encodeToJsonElement(Identifier.serializer(), value)
-    is HumanName -> elementJson.encodeToJsonElement(HumanName.serializer(), value)
-    is Address -> elementJson.encodeToJsonElement(Address.serializer(), value)
-    is ContactPoint -> elementJson.encodeToJsonElement(ContactPoint.serializer(), value)
-    is Period -> elementJson.encodeToJsonElement(Period.serializer(), value)
-    is Annotation -> elementJson.encodeToJsonElement(Annotation.serializer(), value)
-    is Resource -> elementJson.encodeToJsonElement(Resource.serializer(), value)
+    is Quantity -> fhirJson.encodeToJsonElement(Quantity.serializer(), value)
+    is Coding -> fhirJson.encodeToJsonElement(Coding.serializer(), value)
+    is CodeableConcept -> fhirJson.encodeToJsonElement(CodeableConcept.serializer(), value)
+    is Reference -> fhirJson.encodeToJsonElement(Reference.serializer(), value)
+    is Attachment -> fhirJson.encodeToJsonElement(Attachment.serializer(), value)
+    is Identifier -> fhirJson.encodeToJsonElement(Identifier.serializer(), value)
+    is HumanName -> fhirJson.encodeToJsonElement(HumanName.serializer(), value)
+    is Address -> fhirJson.encodeToJsonElement(Address.serializer(), value)
+    is ContactPoint -> fhirJson.encodeToJsonElement(ContactPoint.serializer(), value)
+    is Period -> fhirJson.encodeToJsonElement(Period.serializer(), value)
+    is Annotation -> fhirJson.encodeToJsonElement(Annotation.serializer(), value)
+    is Resource -> fhirJson.encodeToJsonElement(Resource.serializer(), value)
     else -> null
   }

@@ -36,10 +36,10 @@ import dev.ohs.fhir.workflow.expression.EvaluationContext
 import dev.ohs.fhir.workflow.expression.EvaluationResult
 import dev.ohs.fhir.workflow.expression.ExpressionEvaluator
 import dev.ohs.fhir.workflow.expression.ProtocolExpression
+import dev.ohs.fhir.workflow.fhirJson
 import dev.ohs.fhir.workflow.logicalId
 import dev.ohs.fhir.workflow.resolve
 import dev.ohs.fhir.workflow.resourceTypeName
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
@@ -252,12 +252,12 @@ class PlanDefinitionProcessor(
     context: EvaluationContext,
   ): Resource {
     if (writes.isEmpty()) return resource
-    var json = processorJson.encodeToJsonElement(Resource.serializer(), resource).jsonObject
+    var json = fhirJson.encodeToJsonElement(Resource.serializer(), resource).jsonObject
     for (write in writes) {
       val value = evaluateSingle(write.expression, context)
       json = DynamicValueApplier.set(json, write.path, value)
     }
-    return processorJson.decodeFromJsonElement(Resource.serializer(), json)
+    return fhirJson.decodeFromJsonElement(Resource.serializer(), json)
   }
 
   private suspend fun evaluateSingle(
@@ -319,9 +319,4 @@ private fun Expression.toProtocolExpression(): ProtocolExpression {
     else ->
       throw IllegalStateException("Unsupported expression language: ${language.value?.getCode()}")
   }
-}
-
-private val processorJson = Json {
-  encodeDefaults = false
-  explicitNulls = false
 }
