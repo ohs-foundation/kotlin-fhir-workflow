@@ -16,8 +16,8 @@
 package dev.ohs.fhir.workflow.activity.resource.event
 
 import dev.ohs.fhir.model.r4.Communication
-import dev.ohs.fhir.model.r4.DiagnosticReport
 import dev.ohs.fhir.model.r4.MedicationDispense
+import dev.ohs.fhir.model.r4.Procedure
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.Resource
 import dev.ohs.fhir.model.r4.Task
@@ -71,7 +71,7 @@ sealed class CPGEventResource<R : Resource>(internal val mapper: EventStatusCode
         is CPGCommunicationRequest -> CPGCommunicationEvent.from(from)
         is CPGMedicationRequest -> CPGOrderMedicationEvent.from(from, eventClassName)
         is CPGTaskRequest -> CPGTaskEvent.from(from)
-        is CPGServiceRequest -> CPGServiceReportEvent.from(from)
+        is CPGServiceRequest -> CPGProcedureEvent.from(from)
       }
 
     fun of(event: Resource): CPGEventResource<*> =
@@ -79,7 +79,7 @@ sealed class CPGEventResource<R : Resource>(internal val mapper: EventStatusCode
         is Communication -> CPGCommunicationEvent(event)
         is MedicationDispense -> CPGMedicationDispenseEvent(event)
         is Task -> CPGTaskEvent(event)
-        is DiagnosticReport -> CPGServiceReportEvent(event)
+        is Procedure -> CPGProcedureEvent(event)
         else -> throw IllegalArgumentException("Unknown CPG event type ${event::class}.")
       }
   }

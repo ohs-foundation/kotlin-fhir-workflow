@@ -15,33 +15,34 @@
  */
 package dev.ohs.fhir.workflow.activity.resource.event
 
+import dev.ohs.fhir.model.r4.Code
 import dev.ohs.fhir.model.r4.CodeableConcept
-import dev.ohs.fhir.model.r4.DiagnosticReport
+import dev.ohs.fhir.model.r4.Coding
 import dev.ohs.fhir.model.r4.Enumeration
+import dev.ohs.fhir.model.r4.Procedure
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.workflow.activity.resource.request.CPGServiceRequest
 import kotlin.uuid.Uuid
 
 /**
- * The perform-phase event for a [ServiceRequest][dev.ohs.fhir.model.r4.ServiceRequest] flow — a
- * [DiagnosticReport] `basedOn` the request, carrying the order's code/subject. Uses
- * [DiagnosticReportEventStatusMapper] (report status vocabulary differs from the event pattern).
+ * The perform-phase event for a [ServiceRequest][dev.ohs.fhir.model.r4.ServiceRequest] flow — the
+ * [Procedure] the CPG activity profiles pair with `CPGServiceRequest`. Its status is the
+ * event-status vocabulary, so the base [EventStatusCodeMapperImpl] maps it directly.
  */
-class CPGServiceReportEvent(resource: DiagnosticReport) :
-  CPGEventResource<DiagnosticReport>(DiagnosticReportEventStatusMapper) {
+class CPGProcedureEvent(resource: Procedure) :
+  CPGEventResource<Procedure>(EventStatusCodeMapperImpl()) {
 
-  override var resource: DiagnosticReport = resource
+  override var resource: Procedure = resource
 
   override fun setStatus(status: EventStatus, reason: String?) {
     resource =
       resource.copy(
         status =
           Enumeration(
-            value =
-              DiagnosticReport.DiagnosticReportStatus.fromCode(
-                mapper.mapStatusToCode(status) ?: "registered"
-              )
-          )
+            value = Procedure.EventStatus.fromCode(mapper.mapStatusToCode(status) ?: "preparation")
+          ),
+        statusReason =
+          reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
       )
   }
 
@@ -53,18 +54,17 @@ class CPGServiceReportEvent(resource: DiagnosticReport) :
 
   override fun getBasedOn(): Reference? = resource.basedOn.lastOrNull()
 
-  override fun copy(): CPGEventResource<DiagnosticReport> = CPGServiceReportEvent(resource.copy())
+  override fun copy(): CPGEventResource<Procedure> = CPGProcedureEvent(resource.copy())
 
   companion object {
-    fun from(request: CPGServiceRequest): CPGServiceReportEvent {
+    fun from(request: CPGServiceRequest): CPGProcedureEvent {
       val src = request.resource
-      return CPGServiceReportEvent(
-        DiagnosticReport(
+      return CPGProcedureEvent(
+        Procedure(
           id = Uuid.random().toString(),
-          status = Enumeration(value = DiagnosticReport.DiagnosticReportStatus.Registered),
-          code = src.code ?: CodeableConcept(),
+          status = Enumeration(value = Procedure.EventStatus.Preparation),
+          code = src.code,
           subject = src.subject,
-          basedOn = listOf(request.asReference()),
         )
       )
     }

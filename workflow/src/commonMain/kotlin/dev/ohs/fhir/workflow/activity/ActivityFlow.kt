@@ -25,7 +25,7 @@ import dev.ohs.fhir.workflow.activity.phase.request.PlanPhase
 import dev.ohs.fhir.workflow.activity.phase.request.ProposalPhase
 import dev.ohs.fhir.workflow.activity.resource.event.CPGCommunicationEvent
 import dev.ohs.fhir.workflow.activity.resource.event.CPGEventResource
-import dev.ohs.fhir.workflow.activity.resource.event.CPGServiceReportEvent
+import dev.ohs.fhir.workflow.activity.resource.event.CPGProcedureEvent
 import dev.ohs.fhir.workflow.activity.resource.event.CPGTaskEvent
 import dev.ohs.fhir.workflow.activity.resource.event.EventStatus
 import dev.ohs.fhir.workflow.activity.resource.request.CPGCommunicationRequest
@@ -306,7 +306,7 @@ private constructor(
     fun of(
       repository: WorkflowRepository,
       resource: CPGServiceRequest,
-    ): ActivityFlow<CPGServiceRequest, CPGServiceReportEvent> = ActivityFlow(repository, resource)
+    ): ActivityFlow<CPGServiceRequest, CPGProcedureEvent> = ActivityFlow(repository, resource)
 
     /**
      * Returns the active (non-completed) flows for the [patientId], reconstructed from persistence.

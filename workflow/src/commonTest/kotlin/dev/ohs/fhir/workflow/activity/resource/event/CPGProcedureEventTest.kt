@@ -28,7 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class CPGServiceReportEventTest {
+class CPGProcedureEventTest {
   private fun serviceRequest() =
     CPGServiceRequest(
         ServiceRequest(
@@ -42,17 +42,22 @@ class CPGServiceReportEventTest {
       .apply { setIntent(Intent.ORDER) }
 
   @Test
-  fun shouldCreateReportEventFromServiceRequestBasedOnRequest() {
-    val event = CPGServiceReportEvent.from(serviceRequest())
+  fun shouldCreateProcedureEventFromServiceRequest() {
+    val event = CPGProcedureEvent.from(serviceRequest())
     assertEquals(EventStatus.PREPARATION, event.getStatus())
-    assertEquals("ServiceRequest/sr-1", event.getBasedOn()?.reference?.value)
-    assertEquals("CBC", event.resource.code.coding.firstOrNull()?.code?.value)
+    assertEquals("CBC", event.resource.code?.coding?.firstOrNull()?.code?.value)
+    assertEquals("Patient/p1", event.resource.subject.reference?.value)
   }
 
   @Test
-  fun shouldResolveToServiceReportEventWhenServiceRequestOrReport() {
-    assertTrue(
-      CPGEventResource.from(serviceRequest(), "CPGServiceReportEvent") is CPGServiceReportEvent
-    )
+  fun shouldCarrySingleBasedOnWhenSet() {
+    val event = CPGProcedureEvent.from(serviceRequest())
+    event.setBasedOn(serviceRequest().asReference())
+    assertEquals(listOf("ServiceRequest/sr-1"), event.resource.basedOn.map { it.reference?.value })
+  }
+
+  @Test
+  fun shouldResolveToProcedureEventWhenServiceRequest() {
+    assertTrue(CPGEventResource.from(serviceRequest(), "CPGProcedureEvent") is CPGProcedureEvent)
   }
 }
