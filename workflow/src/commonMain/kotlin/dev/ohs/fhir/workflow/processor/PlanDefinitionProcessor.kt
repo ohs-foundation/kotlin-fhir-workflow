@@ -149,7 +149,11 @@ class PlanDefinitionProcessor(
           )
 
         is EvaluationResult.Values ->
-          throw IllegalStateException("Applicability condition did not evaluate to a boolean")
+          if (result.value.isEmpty()) {
+            false
+          } else {
+            throw IllegalStateException("Applicability condition did not evaluate to a boolean")
+          }
       }
     }
   }

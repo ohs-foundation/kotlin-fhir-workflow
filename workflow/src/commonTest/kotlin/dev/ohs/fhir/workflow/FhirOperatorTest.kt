@@ -67,6 +67,43 @@ class FhirOperatorTest {
   }
 
   @Test
+  fun shouldSkipActionWhenApplicabilityFieldIsAbsent() = runTest {
+    val pd =
+      PlanDefinition(
+        id = "epi",
+        status = Enumeration(value = PublicationStatus.Active),
+        action =
+          listOf(
+            PlanDefinition.Action(
+              id = "bcg",
+              title = FhirString(value = "BCG"),
+              condition =
+                listOf(
+                  PlanDefinition.Action.Condition(
+                    kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
+                    expression =
+                      Expression(
+                        language = Enumeration(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                        expression = FhirString(value = "Patient.active = true"),
+                      ),
+                  )
+                ),
+            )
+          ),
+      )
+    val operator = FhirOperator(InMemoryWorkflowRepository())
+
+    val carePlan =
+      operator.generateCarePlan(
+        planDefinition = pd,
+        subject = Patient(id = "p1"),
+        today = LocalDate(2026, 7, 7),
+      )
+
+    assertEquals(0, carePlan.contained.filterIsInstance<RequestGroup>().single().action.size)
+  }
+
+  @Test
   fun shouldResolvePlanDefinitionWithTheSuppliedResolver() = runTest {
     val pd = PlanDefinition(id = "epi", status = Enumeration(value = PublicationStatus.Active))
     val resolver = CanonicalResolver { type, canonical ->
