@@ -17,9 +17,12 @@ package dev.ohs.fhir.workflow
 
 import dev.ohs.fhir.model.r4.Resource
 import dev.ohs.fhir.model.r4.terminologies.ResourceType
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Resolves a knowledge artifact by canonical URL, ignoring any `|version` suffix. Replaces the
+ * Resolves a knowledge artifact by canonical URL, honoring any `|version` suffix. Replaces the
  * cqframework KnowledgeManager.
  *
  * Any canonical resource can be asked for, not only the PlanDefinitions and ActivityDefinitions
@@ -53,9 +56,29 @@ suspend inline fun <reified T : Resource> CanonicalResolver.resolve(canonical: S
   resolve(ResourceType.fromCode(T::class.simpleName ?: error("Anonymous resource type")), canonical)
     as? T
 
-/** The default [CanonicalResolver]: the knowledge artifacts live in the [WorkflowRepository]. */
+/**
+ * The default [CanonicalResolver]: the knowledge artifacts live in the [WorkflowRepository].
+ *
+ * A `|version` suffix constrains the result to that exact business version, matching
+ * `KnowledgeManager.loadResources`; without one, the first artifact published under the url wins.
+ */
 class RepositoryCanonicalResolver(private val repository: WorkflowRepository) : CanonicalResolver {
 
-  override suspend fun resolve(type: ResourceType, canonical: String): Resource? =
-    repository.searchByUri(type.getCode(), "url", canonical.substringBefore("|")).firstOrNull()
+  override suspend fun resolve(type: ResourceType, canonical: String): Resource? {
+    val url = canonical.substringBefore("|")
+    val version = canonical.substringAfter("|", missingDelimiterValue = "")
+    val matches = repository.searchByUri(type.getCode(), "url", url)
+    return if (version.isEmpty()) {
+      matches.firstOrNull()
+    } else {
+      matches.firstOrNull { businessVersion(it) == version }
+    }
+  }
+
+  private fun businessVersion(resource: Resource): String? =
+    fhirJson
+      .encodeToJsonElement(Resource.serializer(), resource)
+      .jsonObject["version"]
+      ?.jsonPrimitive
+      ?.contentOrNull
 }
