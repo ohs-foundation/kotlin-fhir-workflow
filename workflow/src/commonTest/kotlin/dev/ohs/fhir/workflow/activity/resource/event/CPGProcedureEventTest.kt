@@ -22,11 +22,14 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.ServiceRequest
 import dev.ohs.fhir.model.r4.String as FhirString
+import dev.ohs.fhir.workflow.activity.ActivityFlow
 import dev.ohs.fhir.workflow.activity.resource.request.CPGServiceRequest
 import dev.ohs.fhir.workflow.activity.resource.request.Intent
+import dev.ohs.fhir.workflow.testing.InMemoryWorkflowRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
 
 class CPGProcedureEventTest {
   private fun serviceRequest() =
@@ -59,5 +62,29 @@ class CPGProcedureEventTest {
   @Test
   fun shouldResolveToProcedureEventWhenServiceRequest() {
     assertTrue(CPGEventResource.from(serviceRequest(), "CPGProcedureEvent") is CPGProcedureEvent)
+  }
+
+  @Test
+  fun shouldRunFullLifecycleWhenEventIsSuspendedAndResumed() = runTest {
+    val repo = InMemoryWorkflowRepository()
+    val request = serviceRequest()
+    repo.create(request.resource)
+
+    val flow = ActivityFlow.of(repo, request)
+    val draft =
+      flow.preparePerform<CPGProcedureEvent>(CPGProcedureEvent::class.simpleName!!).getOrThrow()
+    val perform = flow.initiatePerform(draft).getOrThrow()
+
+    assertTrue(perform.start().isSuccess)
+    assertEquals(EventStatus.INPROGRESS, perform.getEventResource().getStatus())
+
+    assertTrue(perform.suspendPhase("awaiting-consent").isSuccess)
+    assertEquals(EventStatus.ONHOLD, perform.getEventResource().getStatus())
+
+    assertTrue(perform.resume().isSuccess)
+    assertEquals(EventStatus.INPROGRESS, perform.getEventResource().getStatus())
+
+    assertTrue(perform.complete().isSuccess)
+    assertEquals(EventStatus.COMPLETED, perform.getEventResource().getStatus())
   }
 }
