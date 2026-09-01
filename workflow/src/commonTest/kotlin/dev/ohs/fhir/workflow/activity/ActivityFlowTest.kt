@@ -17,14 +17,18 @@ package dev.ohs.fhir.workflow.activity
 
 import dev.ohs.fhir.model.r4.CommunicationRequest
 import dev.ohs.fhir.model.r4.Enumeration
+import dev.ohs.fhir.model.r4.Procedure
 import dev.ohs.fhir.model.r4.Reference
+import dev.ohs.fhir.model.r4.ServiceRequest
 import dev.ohs.fhir.model.r4.String as FhirString
 import dev.ohs.fhir.model.r4.Task
 import dev.ohs.fhir.workflow.activity.phase.Phase
 import dev.ohs.fhir.workflow.activity.phase.event.PerformPhase
 import dev.ohs.fhir.workflow.activity.phase.request.ProposalPhase
+import dev.ohs.fhir.workflow.activity.resource.event.CPGProcedureEvent
 import dev.ohs.fhir.workflow.activity.resource.event.CPGTaskEvent
 import dev.ohs.fhir.workflow.activity.resource.request.CPGCommunicationRequest
+import dev.ohs.fhir.workflow.activity.resource.request.CPGServiceRequest
 import dev.ohs.fhir.workflow.activity.resource.request.CPGTaskRequest
 import dev.ohs.fhir.workflow.activity.resource.request.Intent
 import dev.ohs.fhir.workflow.testing.InMemoryWorkflowRepository
@@ -158,5 +162,39 @@ class ActivityFlowTest {
 
     assertEquals(1, flows.size)
     flows.single().getCurrentPhase().shouldBeInstanceOf<ProposalPhase<*>>()
+  }
+
+  @Test
+  fun shouldReconstructServiceRequestFlowWhenDrivenToPerform() = runTest {
+    val repo = InMemoryWorkflowRepository()
+    repo.registerReferenceIndex("ServiceRequest", "subject") {
+      listOf((it as ServiceRequest).subject.reference?.value ?: "")
+    }
+    repo.registerReferenceIndex("Procedure", "subject") {
+      listOf((it as Procedure).subject.reference?.value ?: "")
+    }
+
+    val serviceRequest =
+      CPGServiceRequest(
+          ServiceRequest(
+            id = "sr-1",
+            status = Enumeration(value = ServiceRequest.RequestStatus.Active),
+            intent = Enumeration(value = ServiceRequest.RequestIntent.Order),
+            subject = Reference(reference = FhirString(value = "Patient/p1")),
+          )
+        )
+        .apply { setIntent(Intent.ORDER) }
+    repo.create(serviceRequest.resource)
+
+    val flow = ActivityFlow.of(repo, serviceRequest)
+    val event =
+      flow.preparePerform<CPGProcedureEvent>(CPGProcedureEvent::class.simpleName!!).getOrThrow()
+    flow.initiatePerform(event).getOrThrow()
+
+    val flows = ActivityFlow.of(repo, "p1")
+
+    assertEquals(1, flows.size)
+    val perform = flows.single().getCurrentPhase().shouldBeInstanceOf<PerformPhase<*>>()
+    assertEquals("ServiceRequest/sr-1", perform.getEventResource().getBasedOn()?.reference?.value)
   }
 }
