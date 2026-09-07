@@ -1,0 +1,15 @@
+{
+  "resourceType": "Patient",
+  "id": "active_apple_guy",
+  "active": true,
+  "name": [
+    {
+      "use": "official",
+      "prefix": ["Mr."],
+      "given": ["John", "Doe"],
+      "family": "Sr."
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1990-03-04"
+}

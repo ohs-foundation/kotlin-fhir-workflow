@@ -1,0 +1,27 @@
+# Gradle / build
+.gradle/
+build/
+**/build/
+!src/**/build/
+captures/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.kotlin/
+.vscode
+
+# Local config & secrets
+local.properties
+
+# OS
+.DS_Store
+
+# AI agents
+.claude
+CLAUDE.md
+AGENT.md
+docs/superpowers/
+.superpowers/
