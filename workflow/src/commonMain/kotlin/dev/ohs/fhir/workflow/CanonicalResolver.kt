@@ -67,7 +67,7 @@ class RepositoryCanonicalResolver(private val repository: WorkflowRepository) : 
   override suspend fun resolve(type: ResourceType, canonical: String): Resource? {
     val url = canonical.substringBefore("|")
     val version = canonical.substringAfter("|", missingDelimiterValue = "")
-    val matches = repository.searchByUri(type.getCode(), "url", url)
+    val matches = repository.searchByUri(type.code, "url", url)
     return if (version.isEmpty()) {
       matches.firstOrNull()
     } else {

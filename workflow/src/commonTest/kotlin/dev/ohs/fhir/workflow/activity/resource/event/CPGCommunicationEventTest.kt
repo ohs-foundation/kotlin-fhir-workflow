@@ -44,7 +44,7 @@ class CPGCommunicationEventTest {
 
     val event = CPGCommunicationEvent.from(request)
 
-    assertEquals("urgent", event.resource.priority?.value?.getCode())
+    assertEquals("urgent", event.resource.priority?.value?.code)
     val content = event.resource.payload.single().content
     assertEquals("call the CHW", (content as Communication.Payload.Content.String).value.value)
   }

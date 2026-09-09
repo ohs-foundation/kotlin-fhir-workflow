@@ -50,7 +50,7 @@ class CPGMedicationDispenseEvent(resource: MedicationDispense) :
       )
   }
 
-  override fun getStatusCode(): String? = resource.status.value?.getCode()
+  override fun getStatusCode(): String? = resource.status.value?.code
 
   override fun setBasedOn(reference: Reference) {
     resource = resource.copy(authorizingPrescription = resource.authorizingPrescription + reference)
