@@ -17,6 +17,7 @@ package dev.ohs.fhir.workflow
 
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Expression
+import dev.ohs.fhir.model.r4.ExtensibleEnumeration
 import dev.ohs.fhir.model.r4.Patient
 import dev.ohs.fhir.model.r4.PlanDefinition
 import dev.ohs.fhir.model.r4.RequestGroup
@@ -48,7 +49,8 @@ class FhirOperatorTest {
                     kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
                     expression =
                       Expression(
-                        language = Enumeration(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                        language =
+                          ExtensibleEnumeration.of(Expression.ExpressionLanguage.Text_Fhirpath),
                         expression = FhirString(value = "Patient.active = true"),
                       ),
                   )
@@ -83,7 +85,10 @@ class FhirOperatorTest {
                     kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
                     expression =
                       Expression(
-                        language = Enumeration(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                        language =
+                          ExtensibleEnumeration.of(
+                            value = Expression.ExpressionLanguage.Text_Fhirpath
+                          ),
                         expression = FhirString(value = "Patient.active = true"),
                       ),
                   )

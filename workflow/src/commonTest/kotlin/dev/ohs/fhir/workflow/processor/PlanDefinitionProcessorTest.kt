@@ -23,6 +23,7 @@ import dev.ohs.fhir.model.r4.Coding
 import dev.ohs.fhir.model.r4.Dosage
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Expression
+import dev.ohs.fhir.model.r4.ExtensibleEnumeration
 import dev.ohs.fhir.model.r4.Extension
 import dev.ohs.fhir.model.r4.MedicationRequest
 import dev.ohs.fhir.model.r4.Patient
@@ -78,7 +79,10 @@ class PlanDefinitionProcessorTest {
                     kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
                     expression =
                       Expression(
-                        language = Enumeration(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                        language =
+                          ExtensibleEnumeration.of(
+                            value = Expression.ExpressionLanguage.Text_Fhirpath
+                          ),
                         expression = FhirString(value = "Patient.active = true"),
                       ),
                   )
@@ -118,7 +122,10 @@ class PlanDefinitionProcessorTest {
                     kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
                     expression =
                       Expression(
-                        language = Enumeration(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                        language =
+                          ExtensibleEnumeration.of(
+                            value = Expression.ExpressionLanguage.Text_Fhirpath
+                          ),
                         expression = FhirString(value = "Patient.active = false"),
                       ),
                   )
@@ -180,7 +187,7 @@ class PlanDefinitionProcessorTest {
                   kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
                   expression =
                     Expression(
-                      language = Enumeration(value = language),
+                      language = ExtensibleEnumeration.of(value = language),
                       expression = FhirString(value = expression),
                     ),
                 )
@@ -414,7 +421,8 @@ class PlanDefinitionProcessorTest {
               path = FhirString(value = "priority"),
               expression =
                 Expression(
-                  language = Enumeration(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                  language =
+                    ExtensibleEnumeration.of(value = Expression.ExpressionLanguage.Text_Fhirpath),
                   expression = FhirString(value = "'routine'"),
                 ),
             )
@@ -439,7 +447,7 @@ class PlanDefinitionProcessorTest {
     val carePlan = processor.apply(pd, ctx)
 
     val medicationRequest = carePlan.contained.filterIsInstance<MedicationRequest>().single()
-    assertEquals("routine", medicationRequest.priority?.value?.getCode())
+    assertEquals("routine", medicationRequest.priority?.value?.code)
   }
 
   @Test
@@ -465,7 +473,8 @@ class PlanDefinitionProcessorTest {
               path = FhirString(value = "priority"),
               expression =
                 Expression(
-                  language = Enumeration(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                  language =
+                    ExtensibleEnumeration.of(value = Expression.ExpressionLanguage.Text_Fhirpath),
                   expression = FhirString(value = "'stat'"),
                 ),
             )
@@ -487,7 +496,10 @@ class PlanDefinitionProcessorTest {
                     path = FhirString(value = "priority"),
                     expression =
                       Expression(
-                        language = Enumeration(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                        language =
+                          ExtensibleEnumeration.of(
+                            value = Expression.ExpressionLanguage.Text_Fhirpath
+                          ),
                         expression = FhirString(value = "'routine'"),
                       ),
                   )
@@ -501,7 +513,7 @@ class PlanDefinitionProcessorTest {
     val carePlan = processor.apply(pd, ctx)
 
     val medicationRequest = carePlan.contained.filterIsInstance<MedicationRequest>().single()
-    assertEquals("routine", medicationRequest.priority?.value?.getCode())
+    assertEquals("routine", medicationRequest.priority?.value?.code)
   }
 
   @Test
@@ -527,7 +539,8 @@ class PlanDefinitionProcessorTest {
               path = FhirString(value = "notAField"),
               expression =
                 Expression(
-                  language = Enumeration(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                  language =
+                    ExtensibleEnumeration.of(value = Expression.ExpressionLanguage.Text_Fhirpath),
                   expression = FhirString(value = "'routine'"),
                 ),
             )

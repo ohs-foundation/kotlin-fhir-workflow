@@ -42,7 +42,7 @@ class CPGCommunicationEvent(resource: Communication) :
       )
   }
 
-  override fun getStatusCode(): String? = resource.status.value?.getCode()
+  override fun getStatusCode(): String? = resource.status.value?.code
 
   override fun setBasedOn(reference: Reference) {
     resource = resource.copy(basedOn = resource.basedOn + reference)
@@ -61,7 +61,7 @@ class CPGCommunicationEvent(resource: Communication) :
           status = Enumeration(value = Communication.EventStatus.Preparation),
           category = src.category,
           priority =
-            src.priority?.value?.getCode()?.let {
+            src.priority?.value?.code?.let {
               Enumeration(value = Communication.RequestPriority.fromCode(it))
             },
           medium = src.medium,
