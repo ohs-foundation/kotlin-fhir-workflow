@@ -3,12 +3,12 @@ import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.android.kotlin.multiplatform.library)
-  `maven-publish`
+  alias(libs.plugins.maven.publish)
 }
 
-group = "dev.ohs.fhir"
-
-version = "2.0.0-alpha01"
+val mavenGroupId: String by project
+val mavenArtifactId: String by project
+val mavenVersion: String by project
 
 kotlin {
   jvmToolchain(21)
@@ -51,6 +51,40 @@ kotlin {
         implementation(libs.kotest.assertions.core)
         implementation(libs.kotlinx.coroutines.test)
       }
+    }
+  }
+}
+
+mavenPublishing {
+  publishToMavenCentral()
+  signAllPublications()
+  coordinates(mavenGroupId, mavenArtifactId, mavenVersion)
+
+  pom {
+    name = "Kotlin FHIR Workflow"
+    description =
+      "A Kotlin Multiplatform library for FHIR clinical reasoning workflows such as " +
+        "PlanDefinition/\$apply"
+    inceptionYear = "2026"
+    url = "https://github.com/ohs-foundation/kotlin-fhir-workflow"
+    licenses {
+      license {
+        name = "The Apache License, Version 2.0"
+        url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        distribution = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+      }
+    }
+    developers {
+      developer {
+        id = "ohs-foundation"
+        name = "Open Health Stack Foundation"
+        url = "https://ohs.dev/"
+      }
+    }
+    scm {
+      url = "https://github.com/ohs-foundation/kotlin-fhir-workflow/"
+      connection = "scm:git:git://github.com/ohs-foundation/kotlin-fhir-workflow.git"
+      developerConnection = "scm:git:ssh://git@github.com/ohs-foundation/kotlin-fhir-workflow.git"
     }
   }
 }
