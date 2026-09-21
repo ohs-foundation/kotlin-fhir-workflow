@@ -1,3 +1,4 @@
+import java.util.concurrent.Callable
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -26,6 +27,26 @@ android {
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+  }
+  // Compose Multiplatform documents only instrumented tests for Android, but the shared tests run
+  // here as local unit tests so they need no device. With no Android context, Compose's resource
+  // reader finds no assets, calls android.util.Log.d, then reads from the class loader. The
+  // android.jar stub throws on Log.d, so stub methods return default values instead. Each
+  // test<BuildType> source set gets the output of Compose's
+  // copy<BuildType>ComposeResourcesToAndroidAssets task as Java resources, for the class loader.
+  //
+  // If Compose renames that task, or the demo gains tests that use runComposeUiTest, delete this
+  // and run the shared tests as instrumented tests: add
+  // androidTarget { instrumentedTestVariant { sourceSetTree.set(KotlinSourceSetTree.test) } } and
+  // testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner", then run
+  // connectedAndroidTest on a device or emulator.
+  // See https://kotlinlang.org/docs/multiplatform/compose-test.html
+  testOptions { unitTests.isReturnDefaultValues = true }
+  listOf("Debug", "Release").forEach { buildType ->
+    sourceSets
+      .getByName("test$buildType")
+      .resources
+      .srcDir(Callable { tasks.getByName("copy${buildType}ComposeResourcesToAndroidAssets") })
   }
 }
 

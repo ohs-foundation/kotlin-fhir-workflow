@@ -30,6 +30,7 @@ import dev.ohs.fhir.workflow.demo.workflow.DemoFhir
 import dev.ohs.fhir.workflow.demo.workflow.MEDICATION_DISPENSE
 import dev.ohs.fhir.workflow.demo.workflow.ProposalCreationHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,7 +42,7 @@ import kotlinx.coroutines.launch
  * the whole screen as a single [DemoUiState].
  *
  * Actions ([refresh], [installDependencies], [start], [restart]) run on the injected [scope], so
- * the UI just calls them; each shows the progress spinner while it runs.
+ * the UI just calls them; each shows the progress spinner while it runs, and returns its [Job].
  */
 class ActivityFlowDemoModel(
   private val repository: WorkflowRepository,
@@ -210,7 +211,7 @@ class ActivityFlowDemoModel(
   private fun requireHandler() =
     requireNotNull(handler) { "Create the proposal before advancing the flow." }
 
-  private fun withProgress(block: suspend () -> Unit) {
+  private fun withProgress(block: suspend () -> Unit): Job =
     scope.launch {
       _uiState.value = render(progress = true)
       try {
@@ -219,7 +220,6 @@ class ActivityFlowDemoModel(
         _uiState.value = render(progress = false)
       }
     }
-  }
 
   private fun render(progress: Boolean) =
     DemoUiState(

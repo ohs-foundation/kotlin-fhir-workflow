@@ -22,6 +22,7 @@ import dev.ohs.fhir.model.r4.CodeableConcept
 import dev.ohs.fhir.model.r4.CommunicationRequest
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Expression
+import dev.ohs.fhir.model.r4.Expression.ExpressionLanguage
 import dev.ohs.fhir.model.r4.MedicationRequest
 import dev.ohs.fhir.model.r4.Meta
 import dev.ohs.fhir.model.r4.PlanDefinition
@@ -133,29 +134,29 @@ class PlanDefinitionProcessor(
   ): Boolean {
     val applicabilityConditions =
       action.condition.filter { it.kind.value == PlanDefinition.ActionConditionKind.Applicability }
-    if (applicabilityConditions.isEmpty()) return true
-    return applicabilityConditions.all { condition ->
-      val expression =
-        condition.expression
-          ?: throw IllegalStateException(
-            "Applicability condition on action '${action.id}' has no expression"
-          )
-      when (val result = evaluator.evaluate(expression.toProtocolExpression(), context)) {
-        is EvaluationResult.Bool -> result.value
+    return applicabilityConditions.isEmpty() ||
+      applicabilityConditions.all { condition ->
+        val expression =
+          condition.expression
+            ?: throw IllegalStateException(
+              "Applicability condition on action '${action.id}' has no expression"
+            )
+        when (val result = evaluator.evaluate(expression.toProtocolExpression(), context)) {
+          is EvaluationResult.Bool -> result.value
 
-        is EvaluationResult.Failure ->
-          throw IllegalStateException(
-            "Applicability condition failed to evaluate: ${result.message}"
-          )
+          is EvaluationResult.Failure ->
+            throw IllegalStateException(
+              "Applicability condition failed to evaluate: ${result.message}"
+            )
 
-        is EvaluationResult.Values ->
-          if (result.value.isEmpty()) {
-            false
-          } else {
-            throw IllegalStateException("Applicability condition did not evaluate to a boolean")
-          }
+          is EvaluationResult.Values ->
+            if (result.value.isEmpty()) {
+              false
+            } else {
+              throw IllegalStateException("Applicability condition did not evaluate to a boolean")
+            }
+        }
       }
-    }
   }
 
   private suspend fun resolveTitle(action: PlanDefinition.Action): FhirString? {
@@ -287,7 +288,7 @@ class PlanDefinitionProcessor(
   private fun priorityFrom(
     ad: ActivityDefinition
   ): Enumeration<MedicationRequest.RequestPriority>? =
-    ad.priority?.value?.getCode()?.let {
+    ad.priority?.value?.code?.let {
       Enumeration(value = MedicationRequest.RequestPriority.fromCode(it))
     }
 
@@ -311,12 +312,9 @@ class PlanDefinitionProcessor(
 /** Routes a FHIR [Expression] to the workflow [ProtocolExpression] by its declared language. */
 private fun Expression.toProtocolExpression(): ProtocolExpression {
   val text = expression?.value ?: throw IllegalStateException("Expression has no expression text")
-  return when (language.value) {
-    Expression.ExpressionLanguage.Text_Fhirpath -> ProtocolExpression.FhirPath(text)
-
-    Expression.ExpressionLanguage.Text_Cql -> ProtocolExpression.Elm(text)
-
-    else ->
-      throw IllegalStateException("Unsupported expression language: ${language.value?.getCode()}")
+  return when (language.code) {
+    ExpressionLanguage.Text_Fhirpath.code -> ProtocolExpression.FhirPath(text)
+    ExpressionLanguage.Text_Cql.code -> ProtocolExpression.Elm(text)
+    else -> throw IllegalStateException("Unsupported expression language: ${language.code}")
   }
 }

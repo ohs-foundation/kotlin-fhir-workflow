@@ -38,7 +38,7 @@ class CPGServiceRequest(resource: ServiceRequest) :
       )
   }
 
-  override fun getIntent(): Intent = Intent.of(resource.intent.value?.getCode())
+  override fun getIntent(): Intent = Intent.of(resource.intent.value?.code)
 
   override fun setStatus(status: Status, reason: String?) {
     resource =
@@ -51,7 +51,7 @@ class CPGServiceRequest(resource: ServiceRequest) :
       )
   }
 
-  override fun getStatusCode(): String? = resource.status.value?.getCode()
+  override fun getStatusCode(): String? = resource.status.value?.code
 
   override fun setBasedOn(reference: Reference) {
     resource = resource.copy(basedOn = resource.basedOn + reference)

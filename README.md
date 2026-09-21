@@ -42,7 +42,7 @@ class KnowledgeCanonicalResolver(private val knowledgeManager: KnowledgeManager)
   CanonicalResolver {
 
   override suspend fun resolve(type: ResourceType, canonical: String): Resource? =
-    knowledgeManager.loadResources(canonical).firstOrNull { it::class.simpleName == type.getCode() }
+    knowledgeManager.loadResources(canonical).firstOrNull { it::class.simpleName == type.code }
 }
 ```
 

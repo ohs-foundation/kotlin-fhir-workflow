@@ -66,7 +66,7 @@ class CPGCommunicationRequest(resource: CommunicationRequest) :
       )
   }
 
-  override fun getStatusCode(): String? = resource.status.value?.getCode()
+  override fun getStatusCode(): String? = resource.status.value?.code
 
   override fun setBasedOn(reference: Reference) {
     resource = resource.copy(basedOn = resource.basedOn + reference)
