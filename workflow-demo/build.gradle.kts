@@ -1,3 +1,4 @@
+import java.util.concurrent.Callable
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -26,6 +27,15 @@ android {
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+  }
+  // Local unit tests run without an Android context, so Compose reads resources off the classpath
+  // instead of the assets. Its fallback logs via android.util.Log, which the stub jar throws on.
+  testOptions { unitTests.isReturnDefaultValues = true }
+  listOf("Debug", "Release").forEach { buildType ->
+    sourceSets
+      .getByName("test$buildType")
+      .resources
+      .srcDir(Callable { tasks.getByName("copy${buildType}ComposeResourcesToAndroidAssets") })
   }
 }
 

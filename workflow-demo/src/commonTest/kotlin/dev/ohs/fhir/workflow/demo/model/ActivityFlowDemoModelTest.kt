@@ -36,8 +36,8 @@ import kotlinx.coroutines.test.runTest
 class ActivityFlowDemoModelTest {
 
   // An unconfined scope runs the model's launched actions eagerly, so each call completes before
-  // the
-  // next line — the demo's in-memory repository never really suspends.
+  // the next line — the demo's in-memory repository never really suspends. Installing is the
+  // exception: it reads the bundled artifacts, which is a real fetch on wasm, so tests join it.
   private fun TestScope.newModel(repository: WorkflowRepository = InMemoryDemoRepository()) =
     ActivityFlowDemoModel(repository, CoroutineScope(UnconfinedTestDispatcher(testScheduler)))
 
@@ -57,7 +57,7 @@ class ActivityFlowDemoModelTest {
   @Test
   fun shouldEnableProposalWhenDependenciesAreInstalled() = runTest {
     val model = newModel()
-    model.installDependencies()
+    model.installDependencies().join()
 
     assertTrue(model.uiState.value.initialized)
     assertEquals(FlowPhase.PROPOSAL, model.uiState.value.phase)
@@ -67,7 +67,7 @@ class ActivityFlowDemoModelTest {
   @Test
   fun shouldSurfaceThePatientNameOnceInstalled() = runTest {
     val model = newModel()
-    model.installDependencies()
+    model.installDependencies().join()
 
     assertEquals("Mr. John Doe Sr.", model.uiState.value.patientName)
   }
@@ -75,7 +75,7 @@ class ActivityFlowDemoModelTest {
   @Test
   fun shouldGenerateProposalFromPlanDefinitionWhenProposalPhaseStarts() = runTest {
     val model = newModel()
-    model.installDependencies()
+    model.installDependencies().join()
 
     model.start(FlowPhase.PROPOSAL)
 
@@ -93,7 +93,7 @@ class ActivityFlowDemoModelTest {
   @Test
   fun shouldWalkProposalThroughPlanOrderAndPerform() = runTest {
     val model = newModel()
-    model.installDependencies()
+    model.installDependencies().join()
     model.start(FlowPhase.PROPOSAL)
 
     model.start(FlowPhase.PLAN)
@@ -119,7 +119,7 @@ class ActivityFlowDemoModelTest {
   fun shouldResumeAHalfFinishedFlowWhenRelaunched() = runTest {
     val repository = InMemoryDemoRepository()
     val abandoned = newModel(repository)
-    abandoned.installDependencies()
+    abandoned.installDependencies().join()
     abandoned.start(FlowPhase.PROPOSAL)
     abandoned.start(FlowPhase.PLAN)
 
@@ -142,7 +142,7 @@ class ActivityFlowDemoModelTest {
   fun shouldNotResumeARestartedFlowWhenRelaunched() = runTest {
     val repository = InMemoryDemoRepository()
     val abandoned = newModel(repository)
-    abandoned.installDependencies()
+    abandoned.installDependencies().join()
     abandoned.start(FlowPhase.PROPOSAL)
     abandoned.start(FlowPhase.PLAN)
     abandoned.restart()
@@ -169,7 +169,7 @@ class ActivityFlowDemoModelTest {
   fun shouldDeleteTheFlowsResourcesWhenRestarted() = runTest {
     val repository = InMemoryDemoRepository()
     val model = newModel(repository)
-    model.installDependencies()
+    model.installDependencies().join()
     model.start(FlowPhase.PROPOSAL)
     model.start(FlowPhase.PLAN)
     model.start(FlowPhase.ORDER)
