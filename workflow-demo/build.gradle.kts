@@ -118,6 +118,17 @@ kotlin {
         implementation(libs.kotlinx.coroutines.swing)
       }
     }
+    wasmJsMain.dependencies {
+      // fhir-engine's wasm SQLite driver loads this worker by module name, and the module is local
+      // to fhir-engine rather than published, so consumers declare their own copy. See the
+      // "Required workaround for consumers targeting js/wasmJs" section of fhir-engine's README.
+      implementation(
+        npm(
+          "sqlite-wasm-worker",
+          layout.projectDirectory.dir("src/wasmJsMain/npm/sqlite-wasm-worker").asFile,
+        )
+      )
+    }
     commonTest.dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlinx.coroutines.test)
