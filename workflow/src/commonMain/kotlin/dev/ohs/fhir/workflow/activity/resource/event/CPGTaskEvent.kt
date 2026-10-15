@@ -22,12 +22,14 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.Task
 import dev.ohs.fhir.workflow.activity.resource.request.CPGTaskRequest
+import dev.ohs.fhir.workflow.ref
 import kotlin.uuid.Uuid
 
 /**
  * The perform-phase event for a Task-based flow. FHIR has no distinct Task event resource, so the
  * event is a fresh [Task] (status `ready` -> `in-progress` -> `completed`) `basedOn` the request
- * Task, mirroring [CPGCommunicationEvent]. Uses [TaskEventStatusMapper] because Task's status
+ * Task, mirroring [CPGCommunicationEvent]. Its `focus` is also the request Task, which is how
+ * [isEvent] tells it apart from a request Task. Uses [TaskEventStatusMapper] because Task's status
  * vocabulary differs from the event pattern.
  */
 class CPGTaskEvent(resource: Task) : CPGEventResource<Task>(TaskEventStatusMapper) {
@@ -63,11 +65,18 @@ class CPGTaskEvent(resource: Task) : CPGEventResource<Task>(TaskEventStatusMappe
           status = Enumeration(value = Task.TaskStatus.Ready),
           intent = src.intent,
           code = src.code,
+          focus = request.asReference(),
           `for` = src.`for`,
           encounter = src.encounter,
           description = src.description,
         )
       )
+    }
+
+    /** Returns true if the `focus` of the [task] is the Task it is `basedOn`. */
+    internal fun isEvent(task: Task): Boolean {
+      val focus = task.focus?.ref ?: return false
+      return focus == task.basedOn.lastOrNull()?.ref
     }
   }
 }

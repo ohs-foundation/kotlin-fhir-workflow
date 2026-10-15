@@ -24,6 +24,7 @@ import dev.ohs.fhir.model.r4.String as FhirString
 import dev.ohs.fhir.model.r4.Task
 import dev.ohs.fhir.workflow.activity.phase.Phase
 import dev.ohs.fhir.workflow.activity.phase.event.PerformPhase
+import dev.ohs.fhir.workflow.activity.phase.request.PlanPhase
 import dev.ohs.fhir.workflow.activity.phase.request.ProposalPhase
 import dev.ohs.fhir.workflow.activity.resource.event.CPGProcedureEvent
 import dev.ohs.fhir.workflow.activity.resource.event.CPGTaskEvent
@@ -196,5 +197,182 @@ class ActivityFlowTest {
     assertEquals(1, flows.size)
     val perform = flows.single().getCurrentPhase().shouldBeInstanceOf<PerformPhase<*>>()
     assertEquals("ServiceRequest/sr-1", perform.getEventResource().getBasedOn()?.reference?.value)
+  }
+
+  @Test
+  fun shouldReconstructTaskFlowWhenDrivenToPerform() = runTest {
+    val repo = InMemoryWorkflowRepository()
+    repo.registerReferenceIndex("Task", "subject") {
+      listOf((it as Task).`for`?.reference?.value ?: "")
+    }
+
+    val taskRequest =
+      CPGTaskRequest(
+        Task(
+          id = "task-1",
+          status = Enumeration(value = Task.TaskStatus.Requested),
+          intent = Enumeration(value = Task.TaskIntent.Order),
+          `for` = Reference(reference = FhirString(value = "Patient/p1")),
+        )
+      )
+    repo.create(taskRequest.resource)
+
+    val flow = ActivityFlow.of(repo, taskRequest)
+    val event = flow.preparePerform<CPGTaskEvent>(CPGTaskEvent::class.simpleName!!).getOrThrow()
+    flow.initiatePerform(event).getOrThrow()
+
+    val flows = ActivityFlow.of(repo, "p1")
+
+    assertEquals(1, flows.size)
+    val perform = flows.single().getCurrentPhase().shouldBeInstanceOf<PerformPhase<*>>()
+    assertEquals(event.logicalId, perform.getEventResource().logicalId)
+    assertEquals("Task/task-1", perform.getEventResource().getBasedOn()?.reference?.value)
+  }
+
+  @Test
+  fun shouldReconstructTaskFlowWhenPerformedFromProposal() = runTest {
+    val repo = InMemoryWorkflowRepository()
+    repo.registerReferenceIndex("Task", "subject") {
+      listOf((it as Task).`for`?.reference?.value ?: "")
+    }
+
+    val taskRequest =
+      CPGTaskRequest(
+        Task(
+          id = "task-1",
+          status = Enumeration(value = Task.TaskStatus.Requested),
+          intent = Enumeration(value = Task.TaskIntent.Proposal),
+          `for` = Reference(reference = FhirString(value = "Patient/p1")),
+        )
+      )
+    repo.create(taskRequest.resource)
+
+    val flow = ActivityFlow.of(repo, taskRequest)
+    val event = flow.preparePerform<CPGTaskEvent>(CPGTaskEvent::class.simpleName!!).getOrThrow()
+    flow.initiatePerform(event).getOrThrow()
+
+    val flows = ActivityFlow.of(repo, "p1")
+
+    assertEquals(1, flows.size)
+    val perform = flows.single().getCurrentPhase().shouldBeInstanceOf<PerformPhase<*>>()
+    assertEquals(event.logicalId, perform.getEventResource().logicalId)
+  }
+
+  @Test
+  fun shouldReconstructTaskFlowInPlanPhaseWhenPlanInitiated() = runTest {
+    val repo = InMemoryWorkflowRepository()
+    repo.registerReferenceIndex("Task", "subject") {
+      listOf((it as Task).`for`?.reference?.value ?: "")
+    }
+
+    val taskRequest =
+      CPGTaskRequest(
+        Task(
+          id = "task-1",
+          status = Enumeration(value = Task.TaskStatus.Requested),
+          intent = Enumeration(value = Task.TaskIntent.Proposal),
+          `for` = Reference(reference = FhirString(value = "Patient/p1")),
+        )
+      )
+    repo.create(taskRequest.resource)
+
+    val flow = ActivityFlow.of(repo, taskRequest)
+    val plan = flow.preparePlan().getOrThrow()
+    flow.initiatePlan(plan).getOrThrow()
+
+    val flows = ActivityFlow.of(repo, "p1")
+
+    assertEquals(1, flows.size)
+    val planPhase = flows.single().getCurrentPhase().shouldBeInstanceOf<PlanPhase<*>>()
+    assertEquals(plan.logicalId, planPhase.getRequestResource().logicalId)
+    assertEquals(
+      listOf("task-1"),
+      flows.single().getPreviousPhases().map { it.getRequestResource().logicalId },
+    )
+  }
+
+  @Test
+  fun shouldReconstructEachFlowWhenPatientHasTaskAndServiceRequestFlows() = runTest {
+    val repo = InMemoryWorkflowRepository()
+    repo.registerReferenceIndex("ServiceRequest", "subject") {
+      listOf((it as ServiceRequest).subject.reference?.value ?: "")
+    }
+    repo.registerReferenceIndex("Task", "subject") {
+      listOf((it as Task).`for`?.reference?.value ?: "")
+    }
+    val patient = Reference(reference = FhirString(value = "Patient/p1"))
+
+    repo.create(
+      ServiceRequest(
+        id = "sr-1",
+        status = Enumeration(value = ServiceRequest.RequestStatus.Active),
+        intent = Enumeration(value = ServiceRequest.RequestIntent.Order),
+        subject = patient,
+      )
+    )
+    val taskRequest =
+      CPGTaskRequest(
+        Task(
+          id = "task-1",
+          status = Enumeration(value = Task.TaskStatus.Requested),
+          intent = Enumeration(value = Task.TaskIntent.Order),
+          `for` = patient,
+        )
+      )
+    repo.create(taskRequest.resource)
+    repo.create(
+      Task(
+        id = "task-2",
+        status = Enumeration(value = Task.TaskStatus.Requested),
+        intent = Enumeration(value = Task.TaskIntent.Order),
+        `for` = patient,
+      )
+    )
+
+    val flow = ActivityFlow.of(repo, taskRequest)
+    val event = flow.preparePerform<CPGTaskEvent>(CPGTaskEvent::class.simpleName!!).getOrThrow()
+    flow.initiatePerform(event).getOrThrow()
+
+    val phases = ActivityFlow.of(repo, "p1").map { it.getCurrentPhase() }
+
+    assertEquals(3, phases.size)
+    assertEquals(
+      setOf("sr-1", "task-2"),
+      phases
+        .filterIsInstance<Phase.RequestPhase<*>>()
+        .map { it.getRequestResource().logicalId }
+        .toSet(),
+    )
+    assertEquals(
+      listOf(event.logicalId),
+      phases.filterIsInstance<Phase.EventPhase<*>>().map { it.getEventResource().logicalId },
+    )
+  }
+
+  @Test
+  fun shouldSkipTaskFlowWhenEventCompleted() = runTest {
+    val repo = InMemoryWorkflowRepository()
+    repo.registerReferenceIndex("Task", "subject") {
+      listOf((it as Task).`for`?.reference?.value ?: "")
+    }
+
+    val taskRequest =
+      CPGTaskRequest(
+        Task(
+          id = "task-1",
+          status = Enumeration(value = Task.TaskStatus.Requested),
+          intent = Enumeration(value = Task.TaskIntent.Order),
+          `for` = Reference(reference = FhirString(value = "Patient/p1")),
+        )
+      )
+    repo.create(taskRequest.resource)
+
+    val flow = ActivityFlow.of(repo, taskRequest)
+    val event = flow.preparePerform<CPGTaskEvent>(CPGTaskEvent::class.simpleName!!).getOrThrow()
+    val perform = flow.initiatePerform(event).getOrThrow()
+    perform.start().getOrThrow()
+    perform.complete().getOrThrow()
+
+    assertTrue(ActivityFlow.of(repo, "p1").isEmpty())
   }
 }

@@ -16,6 +16,7 @@
 package dev.ohs.fhir.workflow.activity
 
 import dev.ohs.fhir.model.r4.Reference
+import dev.ohs.fhir.model.r4.Task
 import dev.ohs.fhir.workflow.WorkflowRepository
 import dev.ohs.fhir.workflow.activity.phase.Phase
 import dev.ohs.fhir.workflow.activity.phase.ReadOnlyRequestPhase
@@ -314,8 +315,8 @@ private constructor(
      * request/event is completed is dropped. When a new activity type is added, register its
      * event/request resource types below so this search can find it.
      *
-     * Task-based flows are not reconstructed: a Task is both the request and the event, so a
-     * subject search cannot tell the two roles apart without a role marker on the resource.
+     * In a Task-based flow a Task is both the request and the event, so one subject search returns
+     * both. [CPGTaskEvent.isEvent] tells them apart.
      */
     suspend fun of(
       repository: WorkflowRepository,
@@ -323,15 +324,22 @@ private constructor(
     ): List<ActivityFlow<CPGRequestResource<*>, CPGEventResource<*>>> {
       val subject = "Patient/$patientId"
 
+      val (taskEvents, taskRequests) =
+        repository.searchByReferenceParam("Task", "subject", subject).partition {
+          it is Task && CPGTaskEvent.isEvent(it)
+        }
+
       val events =
-        listOf("MedicationDispense", "Communication", "Procedure")
-          .flatMap { repository.searchByReferenceParam(it, "subject", subject) }
+        (listOf("MedicationDispense", "Communication", "Procedure").flatMap {
+            repository.searchByReferenceParam(it, "subject", subject)
+          } + taskEvents)
           .map { CPGEventResource.of(it) }
 
       // This is used to fetch the `basedOn` resource for a request/event to form RequestChain
       val idToRequestMap: MutableMap<String, CPGRequestResource<*>> =
-        listOf("MedicationRequest", "CommunicationRequest", "ServiceRequest")
-          .flatMap { repository.searchByReferenceParam(it, "subject", subject) }
+        (listOf("MedicationRequest", "CommunicationRequest", "ServiceRequest").flatMap {
+            repository.searchByReferenceParam(it, "subject", subject)
+          } + taskRequests)
           .map { CPGRequestResource.of(it) }
           .associateByTo(LinkedHashMap()) { "${it.resourceType}/${it.logicalId}" }
 

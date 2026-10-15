@@ -19,8 +19,10 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Task
 import dev.ohs.fhir.workflow.activity.resource.request.CPGTaskRequest
 import dev.ohs.fhir.workflow.activity.resource.request.Intent
+import dev.ohs.fhir.workflow.activity.resource.request.Status
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class CPGTaskEventTest {
@@ -60,5 +62,34 @@ class CPGTaskEventTest {
         )
       ) is CPGTaskEvent
     )
+  }
+
+  @Test
+  fun shouldSetFocusToRequestWhenFromRequest() {
+    val event = CPGTaskEvent.from(taskRequest())
+    assertEquals("Task/task-1", event.resource.focus?.reference?.value)
+  }
+
+  @Test
+  fun shouldBeEventWhenFocusIsTheBasedOnTask() {
+    val request = taskRequest()
+    val event = CPGTaskEvent.from(request).apply { setBasedOn(request.asReference()) }
+    assertTrue(CPGTaskEvent.isEvent(event.resource))
+  }
+
+  @Test
+  fun shouldNotBeEventWhenFocusIsNotTheBasedOnTask() {
+    val request = taskRequest()
+    val other = request.copy(id = "task-2", status = Status.DRAFT, intent = Intent.ORDER)
+    val event = CPGTaskEvent.from(request).apply { setBasedOn(other.asReference()) }
+    assertFalse(CPGTaskEvent.isEvent(event.resource))
+  }
+
+  @Test
+  fun shouldNotBeEventWhenTaskIsRequest() {
+    val order = taskRequest()
+    val basedOnOrder = order.copy(id = "task-2", status = Status.DRAFT, intent = Intent.ORDER)
+    assertFalse(CPGTaskEvent.isEvent(order.resource))
+    assertFalse(CPGTaskEvent.isEvent(basedOnOrder.resource))
   }
 }
