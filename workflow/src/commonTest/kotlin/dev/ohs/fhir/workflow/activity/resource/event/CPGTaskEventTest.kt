@@ -17,6 +17,8 @@ package dev.ohs.fhir.workflow.activity.resource.event
 
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Task
+import dev.ohs.fhir.model.r4.terminologies.TaskIntent
+import dev.ohs.fhir.model.r4.terminologies.TaskStatus
 import dev.ohs.fhir.workflow.activity.resource.request.CPGTaskRequest
 import dev.ohs.fhir.workflow.activity.resource.request.Intent
 import kotlin.test.Test
@@ -28,8 +30,8 @@ class CPGTaskEventTest {
     CPGTaskRequest(
         Task(
           id = "task-1",
-          status = Enumeration(value = Task.TaskStatus.Requested),
-          intent = Enumeration(value = Task.TaskIntent.Order),
+          status = Enumeration(value = TaskStatus.Requested),
+          intent = Enumeration(value = TaskIntent.Order),
         )
       )
       .apply { setIntent(Intent.ORDER) }
@@ -55,8 +57,8 @@ class CPGTaskEventTest {
       CPGEventResource.of(
         Task(
           id = "t",
-          status = Enumeration(value = Task.TaskStatus.Ready),
-          intent = Enumeration(value = Task.TaskIntent.Order),
+          status = Enumeration(value = TaskStatus.Ready),
+          intent = Enumeration(value = TaskIntent.Order),
         )
       ) is CPGTaskEvent
     )

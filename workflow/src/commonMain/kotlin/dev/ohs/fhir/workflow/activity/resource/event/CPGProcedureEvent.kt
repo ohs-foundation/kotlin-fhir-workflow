@@ -21,6 +21,7 @@ import dev.ohs.fhir.model.r4.Coding
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Procedure
 import dev.ohs.fhir.model.r4.Reference
+import dev.ohs.fhir.model.r4.terminologies.EventStatus as FhirEventStatus
 import dev.ohs.fhir.workflow.activity.resource.request.CPGServiceRequest
 import kotlin.uuid.Uuid
 
@@ -39,7 +40,7 @@ class CPGProcedureEvent(resource: Procedure) :
       resource.copy(
         status =
           Enumeration(
-            value = Procedure.EventStatus.fromCode(mapper.mapStatusToCode(status) ?: "preparation")
+            value = FhirEventStatus.fromCode(mapper.mapStatusToCode(status) ?: "preparation")
           ),
         statusReason =
           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
@@ -62,7 +63,7 @@ class CPGProcedureEvent(resource: Procedure) :
       return CPGProcedureEvent(
         Procedure(
           id = Uuid.random().toString(),
-          status = Enumeration(value = Procedure.EventStatus.Preparation),
+          status = Enumeration(value = FhirEventStatus.Preparation),
           code = src.code,
           subject = src.subject,
         )

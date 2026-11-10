@@ -21,6 +21,8 @@ import dev.ohs.fhir.model.r4.Coding
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.MedicationRequest
 import dev.ohs.fhir.model.r4.Reference
+import dev.ohs.fhir.model.r4.terminologies.MedicationRequestIntent
+import dev.ohs.fhir.model.r4.terminologies.MedicationrequestStatus
 
 class CPGMedicationRequest(resource: MedicationRequest) :
   CPGRequestResource<MedicationRequest>(MedicationRequestStatusMapper) {
@@ -34,10 +36,7 @@ class CPGMedicationRequest(resource: MedicationRequest) :
   override fun setIntent(intent: Intent) {
     resource =
       resource.copy(
-        intent =
-          Enumeration(
-            value = MedicationRequest.MedicationRequestIntent.fromCode(intent.code ?: "order")
-          )
+        intent = Enumeration(value = MedicationRequestIntent.fromCode(intent.code ?: "order"))
       )
   }
 
@@ -48,10 +47,7 @@ class CPGMedicationRequest(resource: MedicationRequest) :
       resource.copy(
         status =
           Enumeration(
-            value =
-              MedicationRequest.MedicationrequestStatus.fromCode(
-                mapper.mapStatusToCode(status) ?: "unknown"
-              )
+            value = MedicationrequestStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown")
           ),
         statusReason =
           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },

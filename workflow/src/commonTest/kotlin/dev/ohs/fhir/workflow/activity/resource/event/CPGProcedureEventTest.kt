@@ -22,6 +22,8 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.ServiceRequest
 import dev.ohs.fhir.model.r4.String as FhirString
+import dev.ohs.fhir.model.r4.terminologies.RequestIntent
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
 import dev.ohs.fhir.workflow.activity.ActivityFlow
 import dev.ohs.fhir.workflow.activity.resource.request.CPGServiceRequest
 import dev.ohs.fhir.workflow.activity.resource.request.Intent
@@ -36,8 +38,8 @@ class CPGProcedureEventTest {
     CPGServiceRequest(
         ServiceRequest(
           id = "sr-1",
-          status = Enumeration(value = ServiceRequest.RequestStatus.Active),
-          intent = Enumeration(value = ServiceRequest.RequestIntent.Order),
+          status = Enumeration(value = RequestStatus.Active),
+          intent = Enumeration(value = RequestIntent.Order),
           code = CodeableConcept(coding = listOf(Coding(code = Code(value = "CBC")))),
           subject = Reference(reference = FhirString(value = "Patient/p1")),
         )

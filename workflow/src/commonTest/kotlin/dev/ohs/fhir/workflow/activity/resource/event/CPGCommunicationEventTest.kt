@@ -19,6 +19,8 @@ import dev.ohs.fhir.model.r4.Communication
 import dev.ohs.fhir.model.r4.CommunicationRequest
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.String as FhirString
+import dev.ohs.fhir.model.r4.terminologies.RequestPriority
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
 import dev.ohs.fhir.workflow.activity.resource.request.CPGCommunicationRequest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,8 +32,8 @@ class CPGCommunicationEventTest {
       CPGCommunicationRequest(
         CommunicationRequest(
           id = "cr-1",
-          status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
-          priority = Enumeration(value = CommunicationRequest.RequestPriority.Urgent),
+          status = Enumeration(value = RequestStatus.Active),
+          priority = Enumeration(value = RequestPriority.Urgent),
           payload =
             listOf(
               CommunicationRequest.Payload(

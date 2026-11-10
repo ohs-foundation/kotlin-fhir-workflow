@@ -17,6 +17,7 @@ package dev.ohs.fhir.workflow.activity.phase
 
 import dev.ohs.fhir.model.r4.CommunicationRequest
 import dev.ohs.fhir.model.r4.Enumeration
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
 import dev.ohs.fhir.workflow.activity.phase.request.BaseRequestPhase
 import dev.ohs.fhir.workflow.activity.resource.request.CPGCommunicationRequest
 import dev.ohs.fhir.workflow.activity.resource.request.CPGRequestResource
@@ -38,10 +39,7 @@ class BaseRequestPhaseTest {
     val repo = InMemoryWorkflowRepository()
     val cr =
       CPGCommunicationRequest(
-          CommunicationRequest(
-            id = "cr-1",
-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
-          )
+          CommunicationRequest(id = "cr-1", status = Enumeration(value = RequestStatus.Active))
         )
         .apply { setIntent(Intent.PROPOSAL) }
     repo.create(cr.resource)

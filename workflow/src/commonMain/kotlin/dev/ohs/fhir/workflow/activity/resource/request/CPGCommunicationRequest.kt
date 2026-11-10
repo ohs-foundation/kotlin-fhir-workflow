@@ -23,6 +23,7 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Extension
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.String as FhirString
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
 
 private const val REQUEST_INTENT_URL = "http://hl7.org/fhir/StructureDefinition/request-intent"
 
@@ -55,12 +56,7 @@ class CPGCommunicationRequest(resource: CommunicationRequest) :
     resource =
       resource.copy(
         status =
-          Enumeration(
-            value =
-              CommunicationRequest.RequestStatus.fromCode(
-                mapper.mapStatusToCode(status) ?: "unknown"
-              )
-          ),
+          Enumeration(value = RequestStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown")),
         statusReason =
           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
       )

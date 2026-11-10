@@ -20,6 +20,8 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.MedicationRequest
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.String as FhirString
+import dev.ohs.fhir.model.r4.terminologies.MedicationRequestIntent
+import dev.ohs.fhir.model.r4.terminologies.MedicationrequestStatus
 import dev.ohs.fhir.workflow.WorkflowRepository
 import dev.ohs.fhir.workflow.demo.data.InMemoryDemoRepository
 import dev.ohs.fhir.workflow.demo.workflow.MEDICATION_DISPENSE
@@ -196,8 +198,8 @@ class ActivityFlowDemoModelTest {
   private fun activeAppleOrder() =
     MedicationRequest(
       id = "existing-apple-order",
-      status = Enumeration(value = MedicationRequest.MedicationrequestStatus.Active),
-      intent = Enumeration(value = MedicationRequest.MedicationRequestIntent.Order),
+      status = Enumeration(value = MedicationrequestStatus.Active),
+      intent = Enumeration(value = MedicationRequestIntent.Order),
       medication =
         MedicationRequest.Medication.CodeableConcept(
           CodeableConcept(text = FhirString(value = "Apple"))

@@ -20,6 +20,8 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.MedicationRequest
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.String as FhirString
+import dev.ohs.fhir.model.r4.terminologies.MedicationRequestIntent
+import dev.ohs.fhir.model.r4.terminologies.MedicationrequestStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
@@ -31,8 +33,8 @@ class EngineWorkflowRepositoryTest {
     repo.create(
       MedicationRequest(
         id = "mr-1",
-        status = Enumeration(value = MedicationRequest.MedicationrequestStatus.Active),
-        intent = Enumeration(value = MedicationRequest.MedicationRequestIntent.Proposal),
+        status = Enumeration(value = MedicationrequestStatus.Active),
+        intent = Enumeration(value = MedicationRequestIntent.Proposal),
         medication = MedicationRequest.Medication.CodeableConcept(CodeableConcept()),
         subject = Reference(reference = FhirString(value = "Patient/p1")),
       )

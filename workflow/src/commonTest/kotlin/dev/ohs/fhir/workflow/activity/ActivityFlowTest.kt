@@ -22,6 +22,10 @@ import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.ServiceRequest
 import dev.ohs.fhir.model.r4.String as FhirString
 import dev.ohs.fhir.model.r4.Task
+import dev.ohs.fhir.model.r4.terminologies.RequestIntent
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
+import dev.ohs.fhir.model.r4.terminologies.TaskIntent
+import dev.ohs.fhir.model.r4.terminologies.TaskStatus
 import dev.ohs.fhir.workflow.activity.phase.Phase
 import dev.ohs.fhir.workflow.activity.phase.event.PerformPhase
 import dev.ohs.fhir.workflow.activity.phase.request.ProposalPhase
@@ -44,10 +48,7 @@ class ActivityFlowTest {
     val repo = InMemoryWorkflowRepository()
     val request =
       CPGCommunicationRequest(
-          CommunicationRequest(
-            id = "cr-1",
-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
-          )
+          CommunicationRequest(id = "cr-1", status = Enumeration(value = RequestStatus.Active))
         )
         .apply { setIntent(Intent.PROPOSAL) }
     repo.create(request.resource)
@@ -64,8 +65,8 @@ class ActivityFlowTest {
       CPGTaskRequest(
           Task(
             id = "task-1",
-            status = Enumeration(value = Task.TaskStatus.Requested),
-            intent = Enumeration(value = Task.TaskIntent.Proposal),
+            status = Enumeration(value = TaskStatus.Requested),
+            intent = Enumeration(value = TaskIntent.Proposal),
           )
         )
         .apply { setIntent(Intent.PROPOSAL) }
@@ -82,8 +83,8 @@ class ActivityFlowTest {
       CPGTaskRequest(
           Task(
             id = "task-1",
-            status = Enumeration(value = Task.TaskStatus.Requested),
-            intent = Enumeration(value = Task.TaskIntent.Order),
+            status = Enumeration(value = TaskStatus.Requested),
+            intent = Enumeration(value = TaskIntent.Order),
           )
         )
         .apply { setIntent(Intent.ORDER) }
@@ -102,10 +103,7 @@ class ActivityFlowTest {
     val repo = InMemoryWorkflowRepository()
     val proposal =
       CPGCommunicationRequest(
-          CommunicationRequest(
-            id = "cr-prop",
-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
-          )
+          CommunicationRequest(id = "cr-prop", status = Enumeration(value = RequestStatus.Active))
         )
         .apply { setIntent(Intent.PROPOSAL) }
     repo.create(proposal.resource)
@@ -114,7 +112,7 @@ class ActivityFlowTest {
       CPGCommunicationRequest(
           CommunicationRequest(
             id = "cr-plan",
-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
+            status = Enumeration(value = RequestStatus.Active),
             basedOn =
               listOf(Reference(reference = FhirString(value = "CommunicationRequest/cr-prop"))),
           )
@@ -140,7 +138,7 @@ class ActivityFlowTest {
       CPGCommunicationRequest(
           CommunicationRequest(
             id = "cr-active",
-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
+            status = Enumeration(value = RequestStatus.Active),
             subject = Reference(reference = FhirString(value = "Patient/p1")),
           )
         )
@@ -151,7 +149,7 @@ class ActivityFlowTest {
       CPGCommunicationRequest(
           CommunicationRequest(
             id = "cr-done",
-            status = Enumeration(value = CommunicationRequest.RequestStatus.Completed),
+            status = Enumeration(value = RequestStatus.Completed),
             subject = Reference(reference = FhirString(value = "Patient/p1")),
           )
         )
@@ -178,8 +176,8 @@ class ActivityFlowTest {
       CPGServiceRequest(
           ServiceRequest(
             id = "sr-1",
-            status = Enumeration(value = ServiceRequest.RequestStatus.Active),
-            intent = Enumeration(value = ServiceRequest.RequestIntent.Order),
+            status = Enumeration(value = RequestStatus.Active),
+            intent = Enumeration(value = RequestIntent.Order),
             subject = Reference(reference = FhirString(value = "Patient/p1")),
           )
         )

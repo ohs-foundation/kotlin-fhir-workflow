@@ -22,6 +22,8 @@ import dev.ohs.fhir.model.r4.Patient
 import dev.ohs.fhir.model.r4.PlanDefinition
 import dev.ohs.fhir.model.r4.RequestGroup
 import dev.ohs.fhir.model.r4.String as FhirString
+import dev.ohs.fhir.model.r4.terminologies.ActionConditionKind
+import dev.ohs.fhir.model.r4.terminologies.ExpressionLanguage
 import dev.ohs.fhir.model.r4.terminologies.PublicationStatus
 import dev.ohs.fhir.model.r4.terminologies.ResourceType
 import dev.ohs.fhir.workflow.testing.InMemoryWorkflowRepository
@@ -46,11 +48,10 @@ class FhirOperatorTest {
               condition =
                 listOf(
                   PlanDefinition.Action.Condition(
-                    kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
+                    kind = Enumeration(value = ActionConditionKind.Applicability),
                     expression =
                       Expression(
-                        language =
-                          ExtensibleEnumeration.of(Expression.ExpressionLanguage.Text_Fhirpath),
+                        language = ExtensibleEnumeration.of(ExpressionLanguage.Text_Fhirpath),
                         expression = FhirString(value = "Patient.active = true"),
                       ),
                   )
@@ -82,13 +83,11 @@ class FhirOperatorTest {
               condition =
                 listOf(
                   PlanDefinition.Action.Condition(
-                    kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
+                    kind = Enumeration(value = ActionConditionKind.Applicability),
                     expression =
                       Expression(
                         language =
-                          ExtensibleEnumeration.of(
-                            value = Expression.ExpressionLanguage.Text_Fhirpath
-                          ),
+                          ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
                         expression = FhirString(value = "Patient.active = true"),
                       ),
                   )

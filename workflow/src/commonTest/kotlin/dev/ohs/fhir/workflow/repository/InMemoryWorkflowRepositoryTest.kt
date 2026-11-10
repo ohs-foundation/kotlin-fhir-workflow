@@ -16,6 +16,7 @@
 package dev.ohs.fhir.workflow.repository
 
 import dev.ohs.fhir.model.r4.CommunicationRequest
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
 import dev.ohs.fhir.workflow.testing.InMemoryWorkflowRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -36,6 +37,5 @@ class InMemoryWorkflowRepositoryTest {
     assertNull(InMemoryWorkflowRepository().read("CommunicationRequest", "nope"))
   }
 
-  private fun statusActive() =
-    dev.ohs.fhir.model.r4.Enumeration(value = CommunicationRequest.RequestStatus.Active)
+  private fun statusActive() = dev.ohs.fhir.model.r4.Enumeration(value = RequestStatus.Active)
 }

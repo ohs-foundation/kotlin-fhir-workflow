@@ -33,7 +33,11 @@ import dev.ohs.fhir.model.r4.ServiceRequest
 import dev.ohs.fhir.model.r4.String as FhirString
 import dev.ohs.fhir.model.r4.Task
 import dev.ohs.fhir.model.r4.Uri
+import dev.ohs.fhir.model.r4.terminologies.ActionConditionKind
+import dev.ohs.fhir.model.r4.terminologies.ExpressionLanguage
 import dev.ohs.fhir.model.r4.terminologies.PublicationStatus
+import dev.ohs.fhir.model.r4.terminologies.RequestPriority
+import dev.ohs.fhir.model.r4.terminologies.RequestResourceType
 import dev.ohs.fhir.workflow.RepositoryCanonicalResolver
 import dev.ohs.fhir.workflow.expression.EvaluationContext
 import dev.ohs.fhir.workflow.expression.ExpressionEvaluatorRouter
@@ -59,7 +63,7 @@ class PlanDefinitionProcessorTest {
             id = "bcg",
             url = Uri(value = adUrl),
             status = Enumeration(value = PublicationStatus.Active),
-            kind = Enumeration(value = ActivityDefinition.RequestResourceType.ServiceRequest),
+            kind = Enumeration(value = RequestResourceType.ServiceRequest),
             title = FhirString(value = "BCG vaccine"),
           )
         )
@@ -76,13 +80,11 @@ class PlanDefinitionProcessorTest {
               condition =
                 listOf(
                   PlanDefinition.Action.Condition(
-                    kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
+                    kind = Enumeration(value = ActionConditionKind.Applicability),
                     expression =
                       Expression(
                         language =
-                          ExtensibleEnumeration.of(
-                            value = Expression.ExpressionLanguage.Text_Fhirpath
-                          ),
+                          ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
                         expression = FhirString(value = "Patient.active = true"),
                       ),
                   )
@@ -119,13 +121,11 @@ class PlanDefinitionProcessorTest {
               condition =
                 listOf(
                   PlanDefinition.Action.Condition(
-                    kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
+                    kind = Enumeration(value = ActionConditionKind.Applicability),
                     expression =
                       Expression(
                         language =
-                          ExtensibleEnumeration.of(
-                            value = Expression.ExpressionLanguage.Text_Fhirpath
-                          ),
+                          ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
                         expression = FhirString(value = "Patient.active = false"),
                       ),
                   )
@@ -153,7 +153,7 @@ class PlanDefinitionProcessorTest {
       )
     val ctx = EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7))
     assertFailsWith<NotImplementedError> {
-      processor.apply(planWithApplicability(Expression.ExpressionLanguage.Text_Cql, "true"), ctx)
+      processor.apply(planWithApplicability(ExpressionLanguage.Text_Cql, "true"), ctx)
     }
   }
 
@@ -167,13 +167,13 @@ class PlanDefinitionProcessorTest {
     val ctx = EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7))
     assertFailsWith<IllegalStateException> {
       processor.apply(
-        planWithApplicability(Expression.ExpressionLanguage.Text_Fhirpath, "'not-a-boolean'"),
+        planWithApplicability(ExpressionLanguage.Text_Fhirpath, "'not-a-boolean'"),
         ctx,
       )
     }
   }
 
-  private fun planWithApplicability(language: Expression.ExpressionLanguage, expression: String) =
+  private fun planWithApplicability(language: ExpressionLanguage, expression: String) =
     PlanDefinition(
       id = "epi",
       status = Enumeration(value = PublicationStatus.Active),
@@ -184,7 +184,7 @@ class PlanDefinitionProcessorTest {
             condition =
               listOf(
                 PlanDefinition.Action.Condition(
-                  kind = Enumeration(value = PlanDefinition.ActionConditionKind.Applicability),
+                  kind = Enumeration(value = ActionConditionKind.Applicability),
                   expression =
                     Expression(
                       language = ExtensibleEnumeration.of(value = language),
@@ -238,7 +238,7 @@ class PlanDefinitionProcessorTest {
             id = "ad-bcg",
             url = Uri(value = adUrl),
             status = Enumeration(value = PublicationStatus.Active),
-            kind = Enumeration(value = ActivityDefinition.RequestResourceType.Task),
+            kind = Enumeration(value = RequestResourceType.Task),
             code = CodeableConcept(coding = listOf(Coding(code = Code(value = "BCG")))),
           )
         )
@@ -302,7 +302,7 @@ class PlanDefinitionProcessorTest {
     val repo = InMemoryWorkflowRepository()
     val pd =
       repo.planForKind(
-        ActivityDefinition.RequestResourceType.MedicationRequest,
+        RequestResourceType.MedicationRequest,
         ActivityDefinition.Product.CodeableConcept(
           CodeableConcept(text = FhirString(value = "Apple, daily"))
         ),
@@ -330,9 +330,9 @@ class PlanDefinitionProcessorTest {
     val profile = "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-medicationrequest"
     val pd =
       repo.planForKind(
-        ActivityDefinition.RequestResourceType.MedicationRequest,
+        RequestResourceType.MedicationRequest,
         profile = Canonical(value = profile),
-        priority = ActivityDefinition.RequestPriority.Routine,
+        priority = RequestPriority.Routine,
         dosage = listOf(Dosage(text = FhirString(value = "One apple a day"))),
       )
     val processor =
@@ -342,7 +342,7 @@ class PlanDefinitionProcessorTest {
 
     val medicationRequest = carePlan.contained.filterIsInstance<MedicationRequest>().single()
     assertEquals(listOf(profile), medicationRequest.meta?.profile?.map { it.value })
-    assertEquals(MedicationRequest.RequestPriority.Routine, medicationRequest.priority?.value)
+    assertEquals(RequestPriority.Routine, medicationRequest.priority?.value)
     assertEquals(
       listOf("One apple a day"),
       medicationRequest.dosageInstruction.map { it.text?.value },
@@ -352,7 +352,7 @@ class PlanDefinitionProcessorTest {
   @Test
   fun shouldInstantiateServiceRequestWhenKindIsServiceRequest() = runTest {
     val repo = InMemoryWorkflowRepository()
-    val pd = repo.planForKind(ActivityDefinition.RequestResourceType.ServiceRequest)
+    val pd = repo.planForKind(RequestResourceType.ServiceRequest)
     val processor =
       PlanDefinitionProcessor(ExpressionEvaluatorRouter(), RepositoryCanonicalResolver(repo))
     val ctx = EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7))
@@ -377,7 +377,7 @@ class PlanDefinitionProcessorTest {
     val serviceRequest =
       PlanDefinitionProcessor(ExpressionEvaluatorRouter(), RepositoryCanonicalResolver(service))
         .apply(
-          service.planForKind(ActivityDefinition.RequestResourceType.ServiceRequest),
+          service.planForKind(RequestResourceType.ServiceRequest),
           EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7)),
         )
         .contained
@@ -389,7 +389,7 @@ class PlanDefinitionProcessorTest {
     val taskRequest =
       PlanDefinitionProcessor(ExpressionEvaluatorRouter(), RepositoryCanonicalResolver(task))
         .apply(
-          task.planForKind(ActivityDefinition.RequestResourceType.Task),
+          task.planForKind(RequestResourceType.Task),
           EvaluationContext(subject = Patient(id = "p1"), today = LocalDate(2026, 7, 7)),
         )
         .contained
@@ -410,7 +410,7 @@ class PlanDefinitionProcessorTest {
         id = "ad-1",
         url = Uri(value = adUrl),
         status = Enumeration(value = PublicationStatus.Active),
-        kind = Enumeration(value = ActivityDefinition.RequestResourceType.MedicationRequest),
+        kind = Enumeration(value = RequestResourceType.MedicationRequest),
         product =
           ActivityDefinition.Product.CodeableConcept(
             CodeableConcept(text = FhirString(value = "Apple"))
@@ -421,8 +421,7 @@ class PlanDefinitionProcessorTest {
               path = FhirString(value = "priority"),
               expression =
                 Expression(
-                  language =
-                    ExtensibleEnumeration.of(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                  language = ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
                   expression = FhirString(value = "'routine'"),
                 ),
             )
@@ -462,7 +461,7 @@ class PlanDefinitionProcessorTest {
         id = "ad-1",
         url = Uri(value = adUrl),
         status = Enumeration(value = PublicationStatus.Active),
-        kind = Enumeration(value = ActivityDefinition.RequestResourceType.MedicationRequest),
+        kind = Enumeration(value = RequestResourceType.MedicationRequest),
         product =
           ActivityDefinition.Product.CodeableConcept(
             CodeableConcept(text = FhirString(value = "Apple"))
@@ -473,8 +472,7 @@ class PlanDefinitionProcessorTest {
               path = FhirString(value = "priority"),
               expression =
                 Expression(
-                  language =
-                    ExtensibleEnumeration.of(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                  language = ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
                   expression = FhirString(value = "'stat'"),
                 ),
             )
@@ -497,9 +495,7 @@ class PlanDefinitionProcessorTest {
                     expression =
                       Expression(
                         language =
-                          ExtensibleEnumeration.of(
-                            value = Expression.ExpressionLanguage.Text_Fhirpath
-                          ),
+                          ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
                         expression = FhirString(value = "'routine'"),
                       ),
                   )
@@ -528,7 +524,7 @@ class PlanDefinitionProcessorTest {
         id = "ad-1",
         url = Uri(value = adUrl),
         status = Enumeration(value = PublicationStatus.Active),
-        kind = Enumeration(value = ActivityDefinition.RequestResourceType.MedicationRequest),
+        kind = Enumeration(value = RequestResourceType.MedicationRequest),
         product =
           ActivityDefinition.Product.CodeableConcept(
             CodeableConcept(text = FhirString(value = "Apple"))
@@ -539,8 +535,7 @@ class PlanDefinitionProcessorTest {
               path = FhirString(value = "notAField"),
               expression =
                 Expression(
-                  language =
-                    ExtensibleEnumeration.of(value = Expression.ExpressionLanguage.Text_Fhirpath),
+                  language = ExtensibleEnumeration.of(value = ExpressionLanguage.Text_Fhirpath),
                   expression = FhirString(value = "'routine'"),
                 ),
             )
@@ -566,10 +561,10 @@ class PlanDefinitionProcessorTest {
   }
 
   private suspend fun InMemoryWorkflowRepository.planForKind(
-    kind: ActivityDefinition.RequestResourceType,
+    kind: RequestResourceType,
     product: ActivityDefinition.Product? = null,
     profile: Canonical? = null,
-    priority: ActivityDefinition.RequestPriority? = null,
+    priority: RequestPriority? = null,
     dosage: List<Dosage> = listOf(),
   ): PlanDefinition {
     val adUrl = "https://ohs.fhir.org/ActivityDefinition/ad-1"

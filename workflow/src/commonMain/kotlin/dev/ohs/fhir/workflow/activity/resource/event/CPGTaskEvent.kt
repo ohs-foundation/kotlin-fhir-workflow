@@ -21,6 +21,7 @@ import dev.ohs.fhir.model.r4.Coding
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.Task
+import dev.ohs.fhir.model.r4.terminologies.TaskStatus
 import dev.ohs.fhir.workflow.activity.resource.request.CPGTaskRequest
 import kotlin.uuid.Uuid
 
@@ -38,7 +39,7 @@ class CPGTaskEvent(resource: Task) : CPGEventResource<Task>(TaskEventStatusMappe
     resource =
       resource.copy(
         status =
-          Enumeration(value = Task.TaskStatus.fromCode(mapper.mapStatusToCode(status) ?: "ready")),
+          Enumeration(value = TaskStatus.fromCode(mapper.mapStatusToCode(status) ?: "ready")),
         statusReason =
           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
       )
@@ -60,7 +61,7 @@ class CPGTaskEvent(resource: Task) : CPGEventResource<Task>(TaskEventStatusMappe
       return CPGTaskEvent(
         Task(
           id = Uuid.random().toString(),
-          status = Enumeration(value = Task.TaskStatus.Ready),
+          status = Enumeration(value = TaskStatus.Ready),
           intent = src.intent,
           code = src.code,
           `for` = src.`for`,

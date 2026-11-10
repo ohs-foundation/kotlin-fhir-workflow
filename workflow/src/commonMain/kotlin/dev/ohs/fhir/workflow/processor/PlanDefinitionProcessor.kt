@@ -22,7 +22,6 @@ import dev.ohs.fhir.model.r4.CodeableConcept
 import dev.ohs.fhir.model.r4.CommunicationRequest
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Expression
-import dev.ohs.fhir.model.r4.Expression.ExpressionLanguage
 import dev.ohs.fhir.model.r4.MedicationRequest
 import dev.ohs.fhir.model.r4.Meta
 import dev.ohs.fhir.model.r4.PlanDefinition
@@ -32,6 +31,17 @@ import dev.ohs.fhir.model.r4.Resource
 import dev.ohs.fhir.model.r4.ServiceRequest
 import dev.ohs.fhir.model.r4.String as FhirString
 import dev.ohs.fhir.model.r4.Task
+import dev.ohs.fhir.model.r4.terminologies.ActionConditionKind
+import dev.ohs.fhir.model.r4.terminologies.CarePlanIntent
+import dev.ohs.fhir.model.r4.terminologies.ExpressionLanguage
+import dev.ohs.fhir.model.r4.terminologies.MedicationRequestIntent
+import dev.ohs.fhir.model.r4.terminologies.MedicationrequestStatus
+import dev.ohs.fhir.model.r4.terminologies.RequestIntent
+import dev.ohs.fhir.model.r4.terminologies.RequestPriority
+import dev.ohs.fhir.model.r4.terminologies.RequestResourceType
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
+import dev.ohs.fhir.model.r4.terminologies.TaskIntent
+import dev.ohs.fhir.model.r4.terminologies.TaskStatus
 import dev.ohs.fhir.workflow.CanonicalResolver
 import dev.ohs.fhir.workflow.expression.EvaluationContext
 import dev.ohs.fhir.workflow.expression.EvaluationResult
@@ -62,8 +72,8 @@ class PlanDefinitionProcessor(
     val requestGroup =
       RequestGroup(
         id = planDefinition.logicalId,
-        status = Enumeration(value = RequestGroup.RequestStatus.Active),
-        intent = Enumeration(value = RequestGroup.RequestIntent.Proposal),
+        status = Enumeration(value = RequestStatus.Active),
+        intent = Enumeration(value = RequestIntent.Proposal),
         action = groupActions,
       )
 
@@ -71,8 +81,8 @@ class PlanDefinitionProcessor(
       id = planDefinition.logicalId,
       instantiatesCanonical =
         planDefinition.url?.value?.let { listOf(Canonical(value = it)) } ?: emptyList(),
-      status = Enumeration(value = CarePlan.RequestStatus.Active),
-      intent = Enumeration(value = CarePlan.CarePlanIntent.Plan),
+      status = Enumeration(value = RequestStatus.Active),
+      intent = Enumeration(value = CarePlanIntent.Plan),
       subject = subjectReference(context),
       contained = listOf<Resource>(requestGroup) + requests,
       activity =
@@ -133,7 +143,7 @@ class PlanDefinitionProcessor(
     context: EvaluationContext,
   ): Boolean {
     val applicabilityConditions =
-      action.condition.filter { it.kind.value == PlanDefinition.ActionConditionKind.Applicability }
+      action.condition.filter { it.kind.value == ActionConditionKind.Applicability }
     return applicabilityConditions.isEmpty() ||
       applicabilityConditions.all { condition ->
         val expression =
@@ -185,13 +195,13 @@ class PlanDefinitionProcessor(
     val basedOn = Reference(reference = FhirString(value = "#${planDefinition.logicalId}"))
     val request: Resource =
       when (ad.kind?.value) {
-        ActivityDefinition.RequestResourceType.MedicationRequest ->
+        RequestResourceType.MedicationRequest ->
           MedicationRequest(
             id = id,
             meta = metaFrom(ad),
             instantiatesCanonical = listOf(Canonical(value = canonical)),
-            status = Enumeration(value = MedicationRequest.MedicationrequestStatus.Active),
-            intent = Enumeration(value = MedicationRequest.MedicationRequestIntent.Proposal),
+            status = Enumeration(value = MedicationrequestStatus.Active),
+            intent = Enumeration(value = MedicationRequestIntent.Proposal),
             priority = priorityFrom(ad),
             medication = medicationFrom(ad),
             subject = subject,
@@ -199,23 +209,23 @@ class PlanDefinitionProcessor(
             dosageInstruction = ad.dosage,
           )
 
-        ActivityDefinition.RequestResourceType.ServiceRequest ->
+        RequestResourceType.ServiceRequest ->
           ServiceRequest(
             id = id,
             meta = metaFrom(ad),
             instantiatesCanonical = listOf(Canonical(value = canonical)),
-            status = Enumeration(value = ServiceRequest.RequestStatus.Active),
-            intent = Enumeration(value = ServiceRequest.RequestIntent.Proposal),
+            status = Enumeration(value = RequestStatus.Active),
+            intent = Enumeration(value = RequestIntent.Proposal),
             code = ad.code,
             subject = subject,
             basedOn = listOf(basedOn),
           )
 
-        ActivityDefinition.RequestResourceType.CommunicationRequest ->
+        RequestResourceType.CommunicationRequest ->
           CommunicationRequest(
             id = id,
             meta = metaFrom(ad),
-            status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
+            status = Enumeration(value = RequestStatus.Active),
             subject = subject,
             basedOn = listOf(basedOn),
           )
@@ -225,8 +235,8 @@ class PlanDefinitionProcessor(
             id = id,
             meta = metaFrom(ad),
             instantiatesCanonical = Canonical(value = canonical),
-            status = Enumeration(value = Task.TaskStatus.Requested),
-            intent = Enumeration(value = Task.TaskIntent.Proposal),
+            status = Enumeration(value = TaskStatus.Requested),
+            intent = Enumeration(value = TaskIntent.Proposal),
             code = ad.code,
             description = action.description ?: ad.description,
             `for` = subject,
@@ -285,12 +295,8 @@ class PlanDefinitionProcessor(
   private fun metaFrom(ad: ActivityDefinition): Meta? =
     ad.profile?.let { Meta(profile = listOf(it)) }
 
-  private fun priorityFrom(
-    ad: ActivityDefinition
-  ): Enumeration<MedicationRequest.RequestPriority>? =
-    ad.priority?.value?.code?.let {
-      Enumeration(value = MedicationRequest.RequestPriority.fromCode(it))
-    }
+  private fun priorityFrom(ad: ActivityDefinition): Enumeration<RequestPriority>? =
+    ad.priority?.value?.code?.let { Enumeration(value = RequestPriority.fromCode(it)) }
 
   private fun medicationFrom(ad: ActivityDefinition): MedicationRequest.Medication =
     when (val product = ad.product) {

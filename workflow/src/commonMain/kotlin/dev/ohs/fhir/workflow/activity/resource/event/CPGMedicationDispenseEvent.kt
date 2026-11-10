@@ -23,6 +23,7 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.MedicationDispense
 import dev.ohs.fhir.model.r4.MedicationRequest
 import dev.ohs.fhir.model.r4.Reference
+import dev.ohs.fhir.model.r4.terminologies.MedicationDispenseStatusCodes
 import dev.ohs.fhir.workflow.activity.resource.request.CPGMedicationRequest
 import kotlin.uuid.Uuid
 
@@ -37,9 +38,7 @@ class CPGMedicationDispenseEvent(resource: MedicationDispense) :
         status =
           Enumeration(
             value =
-              MedicationDispense.MedicationDispenseStatusCodes.fromCode(
-                mapper.mapStatusToCode(status) ?: "unknown"
-              )
+              MedicationDispenseStatusCodes.fromCode(mapper.mapStatusToCode(status) ?: "unknown")
           ),
         statusReason =
           reason?.let {
@@ -67,8 +66,7 @@ class CPGMedicationDispenseEvent(resource: MedicationDispense) :
       return CPGMedicationDispenseEvent(
         MedicationDispense(
           id = Uuid.random().toString(),
-          status =
-            Enumeration(value = MedicationDispense.MedicationDispenseStatusCodes.Preparation),
+          status = Enumeration(value = MedicationDispenseStatusCodes.Preparation),
           medication = medReqToDispenseMedication(src.medication),
           // Only set category if single, otherwise let the application fill it in.
           category = src.category.singleOrNull(),

@@ -20,6 +20,8 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.MedicationRequest
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.String as FhirString
+import dev.ohs.fhir.model.r4.terminologies.MedicationRequestIntent
+import dev.ohs.fhir.model.r4.terminologies.MedicationrequestStatus
 import dev.ohs.fhir.workflow.activity.resource.request.CPGMedicationRequest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -32,8 +34,8 @@ class CPGMedicationDispenseEventTest {
     CPGMedicationRequest(
       MedicationRequest(
         id = "mr-1",
-        status = Enumeration(value = MedicationRequest.MedicationrequestStatus.Active),
-        intent = Enumeration(value = MedicationRequest.MedicationRequestIntent.Order),
+        status = Enumeration(value = MedicationrequestStatus.Active),
+        intent = Enumeration(value = MedicationRequestIntent.Order),
         medication = MedicationRequest.Medication.CodeableConcept(category("amoxicillin")),
         subject = Reference(reference = FhirString(value = "Patient/p1")),
         category = categories,

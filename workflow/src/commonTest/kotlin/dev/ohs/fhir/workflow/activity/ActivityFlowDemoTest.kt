@@ -17,6 +17,7 @@ package dev.ohs.fhir.workflow.activity
 
 import dev.ohs.fhir.model.r4.CommunicationRequest
 import dev.ohs.fhir.model.r4.Enumeration
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
 import dev.ohs.fhir.workflow.activity.phase.event.PerformPhase
 import dev.ohs.fhir.workflow.activity.phase.request.OrderPhase
 import dev.ohs.fhir.workflow.activity.phase.request.PlanPhase
@@ -38,7 +39,7 @@ class ActivityFlowDemoTest {
     CPGCommunicationRequest(
         CommunicationRequest(
           id = "com-req-01",
-          status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
+          status = Enumeration(value = RequestStatus.Active),
           subject = reference("Patient/pat-01"),
         )
       )
@@ -57,7 +58,7 @@ class ActivityFlowDemoTest {
     planPhase.shouldBeInstanceOf<PlanPhase<*>>()
     // proposal is now completed in the store
     val storedProposal = repo.read("CommunicationRequest", "com-req-01") as CommunicationRequest
-    assertTrue(storedProposal.status.value == CommunicationRequest.RequestStatus.Completed)
+    assertTrue(storedProposal.status.value == RequestStatus.Completed)
 
     // Activate the plan before it can move to Order
     val activePlan = planPhase.getRequestResource().apply { setStatus(Status.ACTIVE) }

@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.3.21"
 android-gradle-plugin = "8.13.0"
-ohs-fhir-model = "1.0.0-rc03"
+ohs-fhir-model = "1.0.0"
 ohs-fhir-path = "1.0.0-beta06"
 ohs-fhir-engine = "2.0.0-alpha03"
 kotlinx-coroutines = "1.10.2"

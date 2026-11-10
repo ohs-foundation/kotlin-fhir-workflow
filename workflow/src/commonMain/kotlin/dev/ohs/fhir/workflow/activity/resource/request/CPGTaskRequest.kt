@@ -21,6 +21,8 @@ import dev.ohs.fhir.model.r4.Coding
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.Task
+import dev.ohs.fhir.model.r4.terminologies.TaskIntent
+import dev.ohs.fhir.model.r4.terminologies.TaskStatus
 
 class CPGTaskRequest(resource: Task) : CPGRequestResource<Task>(TaskStatusMapper) {
 
@@ -32,7 +34,7 @@ class CPGTaskRequest(resource: Task) : CPGRequestResource<Task>(TaskStatusMapper
 
   override fun setIntent(intent: Intent) {
     resource =
-      resource.copy(intent = Enumeration(value = Task.TaskIntent.fromCode(intent.code ?: "order")))
+      resource.copy(intent = Enumeration(value = TaskIntent.fromCode(intent.code ?: "order")))
   }
 
   override fun getIntent(): Intent = Intent.of(resource.intent.value?.code)
@@ -41,9 +43,7 @@ class CPGTaskRequest(resource: Task) : CPGRequestResource<Task>(TaskStatusMapper
     resource =
       resource.copy(
         status =
-          Enumeration(
-            value = Task.TaskStatus.fromCode(mapper.mapStatusToCode(status) ?: "requested")
-          ),
+          Enumeration(value = TaskStatus.fromCode(mapper.mapStatusToCode(status) ?: "requested")),
         statusReason =
           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
       )

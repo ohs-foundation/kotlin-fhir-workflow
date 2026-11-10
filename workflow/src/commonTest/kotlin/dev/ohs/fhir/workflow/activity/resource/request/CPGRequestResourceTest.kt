@@ -17,17 +17,14 @@ package dev.ohs.fhir.workflow.activity.resource.request
 
 import dev.ohs.fhir.model.r4.CommunicationRequest
 import dev.ohs.fhir.model.r4.Enumeration
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class CPGRequestResourceTest {
   @Test
   fun shouldRoundTripStatusAndIntentWhenStoredAsExtensions() {
-    val cr =
-      CommunicationRequest(
-        id = "cr-1",
-        status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
-      )
+    val cr = CommunicationRequest(id = "cr-1", status = Enumeration(value = RequestStatus.Active))
     val wrapped = CPGRequestResource.of(cr)
     wrapped.setIntent(Intent.PROPOSAL)
     assertEquals(Intent.PROPOSAL, wrapped.getIntent())
@@ -39,11 +36,7 @@ class CPGRequestResourceTest {
 
   @Test
   fun shouldSetBasedOnToParentWhenCopiedWithNewId() {
-    val cr =
-      CommunicationRequest(
-        id = "cr-1",
-        status = Enumeration(value = CommunicationRequest.RequestStatus.Active),
-      )
+    val cr = CommunicationRequest(id = "cr-1", status = Enumeration(value = RequestStatus.Active))
     val parent = CPGRequestResource.of(cr).apply { setIntent(Intent.PROPOSAL) }
     val child = parent.copy(id = "cr-1-plan", status = Status.DRAFT, intent = Intent.PLAN)
     assertEquals("CommunicationRequest/cr-1", child.getBasedOn()?.reference?.value)

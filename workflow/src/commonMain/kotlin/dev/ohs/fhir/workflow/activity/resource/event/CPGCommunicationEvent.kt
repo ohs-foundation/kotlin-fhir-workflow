@@ -22,6 +22,8 @@ import dev.ohs.fhir.model.r4.Communication
 import dev.ohs.fhir.model.r4.CommunicationRequest
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Reference
+import dev.ohs.fhir.model.r4.terminologies.EventStatus as FhirEventStatus
+import dev.ohs.fhir.model.r4.terminologies.RequestPriority
 import dev.ohs.fhir.workflow.activity.resource.request.CPGCommunicationRequest
 import kotlin.uuid.Uuid
 
@@ -35,7 +37,7 @@ class CPGCommunicationEvent(resource: Communication) :
       resource.copy(
         status =
           Enumeration(
-            value = Communication.EventStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown")
+            value = FhirEventStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown")
           ),
         statusReason =
           reason?.let { CodeableConcept(coding = listOf(Coding(code = Code(value = it)))) },
@@ -58,12 +60,10 @@ class CPGCommunicationEvent(resource: Communication) :
       return CPGCommunicationEvent(
         Communication(
           id = Uuid.random().toString(),
-          status = Enumeration(value = Communication.EventStatus.Preparation),
+          status = Enumeration(value = FhirEventStatus.Preparation),
           category = src.category,
           priority =
-            src.priority?.value?.code?.let {
-              Enumeration(value = Communication.RequestPriority.fromCode(it))
-            },
+            src.priority?.value?.code?.let { Enumeration(value = RequestPriority.fromCode(it)) },
           medium = src.medium,
           subject = src.subject,
           about = src.about,

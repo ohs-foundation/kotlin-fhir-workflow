@@ -18,6 +18,8 @@ package dev.ohs.fhir.workflow.activity.resource.request
 import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.Reference
 import dev.ohs.fhir.model.r4.ServiceRequest
+import dev.ohs.fhir.model.r4.terminologies.RequestIntent
+import dev.ohs.fhir.model.r4.terminologies.RequestStatus
 
 /**
  * CPG request wrapper for a lab/service order ([ServiceRequest]); status uses the request pattern.
@@ -33,9 +35,7 @@ class CPGServiceRequest(resource: ServiceRequest) :
 
   override fun setIntent(intent: Intent) {
     resource =
-      resource.copy(
-        intent = Enumeration(value = ServiceRequest.RequestIntent.fromCode(intent.code ?: "order"))
-      )
+      resource.copy(intent = Enumeration(value = RequestIntent.fromCode(intent.code ?: "order")))
   }
 
   override fun getIntent(): Intent = Intent.of(resource.intent.value?.code)
@@ -44,10 +44,7 @@ class CPGServiceRequest(resource: ServiceRequest) :
     resource =
       resource.copy(
         status =
-          Enumeration(
-            value =
-              ServiceRequest.RequestStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown")
-          )
+          Enumeration(value = RequestStatus.fromCode(mapper.mapStatusToCode(status) ?: "unknown"))
       )
   }
 

@@ -20,6 +20,7 @@ import dev.ohs.fhir.model.r4.Enumeration
 import dev.ohs.fhir.model.r4.MedicationRequest
 import dev.ohs.fhir.model.r4.Patient
 import dev.ohs.fhir.model.r4.Resource
+import dev.ohs.fhir.model.r4.terminologies.BundleType
 import dev.ohs.fhir.workflow.FhirOperator
 import dev.ohs.fhir.workflow.WorkflowRepository
 import dev.ohs.fhir.workflow.activity.resource.request.CPGMedicationRequest
@@ -104,7 +105,7 @@ class ProposalCreationHandler(
         "Patient/$patientId",
       )
     return Bundle(
-      type = Enumeration(value = Bundle.BundleType.Collection),
+      type = Enumeration(value = BundleType.Collection),
       entry = requests.map { Bundle.Entry(resource = it) },
     )
   }
